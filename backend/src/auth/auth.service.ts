@@ -2,11 +2,16 @@ import * as bcrypt from 'bcrypt';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+import { JwtService } from '@nestjs/jwt';
+import e from 'express';
 
 @Injectable()
 export class AuthService {
 
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private jwtService: JwtService) { }
 
     async register(dto: RegisterDto) {
 
@@ -37,6 +42,38 @@ export class AuthService {
         });
 
         return user;
+    }
+
+    async login(dto: LoginDto) {
+        const user = await this.prisma.user.findUnique({
+            where: { email: dto.email },
+        });
+
+        if (!user) {
+            throw new BadRequestException('User not found');
+        }
+
+        const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
+
+        if (!isPasswordValid) {
+            throw new BadRequestException('Invalid password');
+        }
+
+        const payload = { id: user.id, email: user.email };
+        const accessToken = this.jwtService.sign(payload);
+        const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+        await this.prisma.refreshToken.create({
+            data: {
+                token: refreshToken,
+                userId: user.id,
+                expiresAt: expiresAt,
+            },
+        });
+
+        return { accessToken, refreshToken };
     }
 
 }
