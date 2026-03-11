@@ -16,5 +16,9 @@ export class AuthController {
     async login(@Body() dto: LoginDto) {
         return this.authService.login(dto);
     }
+    @Post('logout')
+    async logout(@Body('refreshToken') refreshToken: string) {
+        return this.authService.logout(refreshToken);
+    }
 
 }
