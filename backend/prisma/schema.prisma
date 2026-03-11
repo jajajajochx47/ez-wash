@@ -39,13 +39,13 @@ model User {
 
 model RefreshToken {
   id        String   @id @default(uuid())
-  token     String
+  token     String   @unique
   userId    String
-  user      User @relation(fields: [userId], references: [id])
+
+  user      User     @relation(fields: [userId], references: [id])
 
   expiresAt DateTime
   revoked   Boolean  @default(false)
-
   createdAt DateTime @default(now())
 }
 

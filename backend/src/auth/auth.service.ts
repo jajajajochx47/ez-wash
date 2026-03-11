@@ -4,7 +4,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
-import e from 'express';
+import { UnauthorizedException } from '@nestjs/common';
+
 
 @Injectable()
 export class AuthService {
@@ -85,5 +86,28 @@ export class AuthService {
 
         return { message: 'Logged out successfully' };
     }
+    async refresh(refreshToken: string) {
 
+        const token = await this.prisma.refreshToken.findUnique({
+            where: { token: refreshToken },
+            include: { user: true },
+        });
+
+        if (!token || token.revoked) {
+            throw new UnauthorizedException('Invalid refresh token');
+        }
+
+        if (token.expiresAt < new Date()) {
+            throw new UnauthorizedException('Refresh token expired');
+        }
+
+        const payload = {
+            id: token.user.id,
+            email: token.user.email,
+        };
+
+        const accessToken = this.jwtService.sign(payload);
+
+        return { accessToken };
+    }
 }
