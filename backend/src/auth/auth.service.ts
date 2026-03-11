@@ -110,4 +110,13 @@ export class AuthService {
 
         return { accessToken };
     }
+    async logoutAll(userId: string) {
+
+        await this.prisma.refreshToken.updateMany({
+            where: { userId },
+            data: { revoked: true },
+        });
+
+        return { message: 'Logged out from all devices' };
+    }
 }

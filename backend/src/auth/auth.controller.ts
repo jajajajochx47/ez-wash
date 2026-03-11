@@ -1,7 +1,10 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
+
 
 @Controller('auth')
 export class AuthController {
@@ -12,6 +15,7 @@ export class AuthController {
     async register(@Body() dto: RegisterDto) {
         return this.authService.register(dto);
     }
+    @Throttle({ default: { limit: 5, ttl: 60000 } })
     @Post('login')
     async login(@Body() dto: LoginDto) {
         return this.authService.login(dto);
@@ -20,5 +24,9 @@ export class AuthController {
     async logout(@Body('refreshToken') refreshToken: string) {
         return this.authService.logout(refreshToken);
     }
-
+    @UseGuards(AuthGuard('jwt'))
+    @Post('logout-all')
+    logoutAll(@Req() req) {
+        return this.authService.logoutAll(req.user.id);
+    }
 }
