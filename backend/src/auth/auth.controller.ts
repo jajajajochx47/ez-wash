@@ -4,6 +4,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
+import { JwtAuthGuard } from './jwt.guard';
 
 
 @Controller('auth')
@@ -24,7 +25,7 @@ export class AuthController {
     async logout(@Body('refreshToken') refreshToken: string) {
         return this.authService.logout(refreshToken);
     }
-    @UseGuards(AuthGuard('jwt'))
+    @UseGuards(JwtAuthGuard)
     @Post('logout-all')
     logoutAll(@Req() req) {
         return this.authService.logoutAll(req.user.id);
