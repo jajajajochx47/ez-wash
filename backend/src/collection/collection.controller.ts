@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { CollectionService } from './collection.service';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
@@ -13,8 +13,24 @@ export class CollectionController {
   }
 
   @Get()
-  findAll() {
-    return this.collectionService.findAll();
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('branchId') branchId?: string,
+    @Query('machineId') machineId?: string,
+    @Query('collectedById') collectedById?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.collectionService.findAll({
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+      branchId,
+      machineId,
+      collectedById,
+      startDate,
+      endDate,
+    });
   }
 
   @Get(':id')

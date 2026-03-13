@@ -1,7 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { CreateIncomeDto } from './dto/create-income.dto';
 import { UpdateIncomeDto } from './dto/update-income.dto';
 import { PrismaService } from '../prisma/prisma.service';
+
+type IncomeListQuery = {
+  page?: number;
+  limit?: number;
+  branchId?: string;
+  machineId?: string;
+  startDate?: string;
+  endDate?: string;
+  date?: string;
+};
 
 @Injectable()
 export class IncomeService {
@@ -14,9 +25,44 @@ export class IncomeService {
     return income;
   }
 
-  async findAll() {
-    const incomes = await this.prisma.income.findMany();
-    return incomes;
+  async findAll(query: IncomeListQuery = {}) {
+    const page = Number.isFinite(query.page) ? Number(query.page) : 1;
+    const limit = Number.isFinite(query.limit) ? Number(query.limit) : 20;
+    const safePage = page > 0 ? page : 1;
+    const safeLimit = Math.min(100, Math.max(1, limit));
+    const skip = (safePage - 1) * safeLimit;
+
+    const where: Prisma.IncomeWhereInput = {};
+    if (query.branchId) where.branchId = query.branchId;
+    if (query.machineId) where.machineId = query.machineId;
+
+    if (query.date) {
+      where.incomeDate = new Date(query.date);
+    } else if (query.startDate || query.endDate) {
+      where.incomeDate = {};
+      if (query.startDate) where.incomeDate.gte = new Date(query.startDate);
+      if (query.endDate) where.incomeDate.lte = new Date(query.endDate);
+    }
+
+    const [total, incomes] = await this.prisma.$transaction([
+      this.prisma.income.count({ where }),
+      this.prisma.income.findMany({
+        where,
+        skip,
+        take: safeLimit,
+        orderBy: { incomeDate: 'desc' },
+      }),
+    ]);
+
+    return {
+      data: incomes,
+      meta: {
+        total,
+        page: safePage,
+        limit: safeLimit,
+        totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+      },
+    };
   }
 
   async findOne(id: string) {

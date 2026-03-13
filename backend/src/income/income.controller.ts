@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { IncomeService } from './income.service';
 import { CreateIncomeDto } from './dto/create-income.dto';
 import { UpdateIncomeDto } from './dto/update-income.dto';
@@ -11,8 +11,24 @@ export class IncomeController {
     return this.incomeService.create(createIncomeDto);
   }
   @Get()
-  findAll() {
-    return this.incomeService.findAll();
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('branchId') branchId?: string,
+    @Query('machineId') machineId?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('date') date?: string,
+  ) {
+    return this.incomeService.findAll({
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+      branchId,
+      machineId,
+      startDate,
+      endDate,
+      date,
+    });
   }
   @Get(':id')
   findOne(@Param('id') id: string) {
