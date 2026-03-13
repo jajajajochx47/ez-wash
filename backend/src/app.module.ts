@@ -5,6 +5,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { TransactionsModule } from './transactions/transactions.module';
 import { BranchModule } from './branch/branch.module';
 import { MachineModule } from './machine/machine.module';
+import { IncomeModule } from './income/income.module';
 
 @Module({
   imports: [
@@ -16,6 +17,6 @@ import { MachineModule } from './machine/machine.module';
         },
       ],
     }),
-    AuthModule, UserModule, TransactionsModule, BranchModule, MachineModule],
+    AuthModule, UserModule, TransactionsModule, BranchModule, MachineModule, IncomeModule],
 })
 export class AppModule { }
