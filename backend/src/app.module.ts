@@ -8,6 +8,7 @@ import { MachineModule } from './machine/machine.module';
 import { IncomeModule } from './income/income.module';
 import { ExpenseModule } from './expense/expense.module';
 import { ExpensecategoryModule } from './expensecategory/expensecategory.module';
+import { RepairModule } from './repair/repair.module';
 
 @Module({
   imports: [
@@ -19,6 +20,6 @@ import { ExpensecategoryModule } from './expensecategory/expensecategory.module'
         },
       ],
     }),
-    AuthModule, UserModule, TransactionsModule, BranchModule, MachineModule, IncomeModule, ExpenseModule, ExpensecategoryModule],
+    AuthModule, UserModule, TransactionsModule, BranchModule, MachineModule, IncomeModule, ExpenseModule, ExpensecategoryModule, RepairModule],
 })
 export class AppModule { }
