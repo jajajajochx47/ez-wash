@@ -3,6 +3,8 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TransactionsModule } from './transactions/transactions.module';
+import { BranchModule } from './branch/branch.module';
+import { MachineModule } from './machine/machine.module';
 
 @Module({
   imports: [
@@ -14,6 +16,6 @@ import { TransactionsModule } from './transactions/transactions.module';
         },
       ],
     }),
-    AuthModule, UserModule, TransactionsModule],
+    AuthModule, UserModule, TransactionsModule, BranchModule, MachineModule],
 })
 export class AppModule { }

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,12 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//////////////////////////////////////////////////////
+// ROLE
+//////////////////////////////////////////////////////
+
 model Role {
-  id    String @id @default(uuid())
-  name  String @unique
+  id   String @id @default(uuid())
+  name String @unique
 
   users User[]
+
+  @@map("roles")
 }
+
+//////////////////////////////////////////////////////
+// USER
+//////////////////////////////////////////////////////
 
 model User {
   id           String   @id @default(uuid())
@@ -33,30 +37,230 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  refreshTokens RefreshToken[]
-  loginLogs     LoginLog[]
+  refreshTokens      RefreshToken[]
+  loginLogs          LoginLog[]
+  machineCollections MachineCollection[]
+
+  @@map("users")
 }
+
+//////////////////////////////////////////////////////
+// REFRESH TOKEN
+//////////////////////////////////////////////////////
 
 model RefreshToken {
   id        String   @id @default(uuid())
   token     String   @unique
-  userId    String
 
-  user      User     @relation(fields: [userId], references: [id])
+  userId String
+  user   User @relation(fields: [userId], references: [id])
 
   expiresAt DateTime
   revoked   Boolean  @default(false)
+  revokedAt DateTime?
+
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
 }
+
+//////////////////////////////////////////////////////
+// LOGIN LOG
+//////////////////////////////////////////////////////
 
 model LoginLog {
   id        String   @id @default(uuid())
-  userId    String
-  user      User @relation(fields: [userId], references: [id])
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
 
   ipAddress String
   userAgent String
   success   Boolean
 
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("login_logs")
+}
+
+//////////////////////////////////////////////////////
+// MACHINE ENUMS
+//////////////////////////////////////////////////////
+
+enum MachineType {
+  WASHER
+  DRYER
+}
+
+enum MachineStatus {
+  ACTIVE
+  MAINTENANCE
+  DISABLED
+}
+
+enum RepairStatus {
+  PENDING
+  FIXED
+}
+
+//////////////////////////////////////////////////////
+// BRANCH
+//////////////////////////////////////////////////////
+
+model Branch {
+  id       String  @id @default(uuid())
+  name     String  @unique
+  location String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  machines Machine[]
+  incomes  Income[]
+  expenses Expense[]
+
+  @@map("branches")
+}
+
+//////////////////////////////////////////////////////
+// MACHINE
+//////////////////////////////////////////////////////
+
+model Machine {
+  id          String        @id @default(uuid())
+  machineCode String
+  machineType MachineType
+  pricePerUse Decimal       @db.Decimal(10,2)
+
+  status MachineStatus @default(ACTIVE)
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  incomes     Income[]
+  collections MachineCollection[]
+  repairs     Repair[]
+
+  @@unique([machineCode, branchId])
+  @@index([branchId])
+  @@map("machines")
+}
+
+//////////////////////////////////////////////////////
+// MACHINE COLLECTION (เก็บเงินจากเครื่อง)
+//////////////////////////////////////////////////////
+
+model MachineCollection {
+  id String @id @default(uuid())
+
+  machineId String
+  machine   Machine @relation(fields: [machineId], references: [id])
+
+  collectedById String?
+  collectedBy   User? @relation(fields: [collectedById], references: [id])
+
+  amount Decimal @db.Decimal(10,2)
+
+  collectedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([machineId])
+  @@map("machine_collections")
+}
+
+//////////////////////////////////////////////////////
+// INCOME
+//////////////////////////////////////////////////////
+
+model Income {
+  id String @id @default(uuid())
+
+  machineId String
+  machine   Machine @relation(fields: [machineId], references: [id])
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  amount Decimal @db.Decimal(10,2)
+
+  note String?
+
+  incomeDate DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([machineId])
+  @@index([branchId])
+  @@index([incomeDate])
+  @@map("incomes")
+}
+
+//////////////////////////////////////////////////////
+// EXPENSE CATEGORY
+//////////////////////////////////////////////////////
+
+model ExpenseCategory {
+  id   String @id @default(uuid())
+  name String @unique
+
+  expenses Expense[]
+
+  createdAt DateTime @default(now())
+
+  @@map("expense_categories")
+}
+
+//////////////////////////////////////////////////////
+// EXPENSE
+//////////////////////////////////////////////////////
+
+model Expense {
+  id String @id @default(uuid())
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  categoryId String
+  category   ExpenseCategory @relation(fields: [categoryId], references: [id])
+
+  amount Decimal @db.Decimal(10,2)
+
+  description String?
+
+  expenseDate DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([branchId])
+  @@index([categoryId])
+  @@index([expenseDate])
+  @@map("expenses")
+}
+
+//////////////////////////////////////////////////////
+// MACHINE REPAIR
+//////////////////////////////////////////////////////
+
+model Repair {
+  id String @id @default(uuid())
+
+  machineId String
+  machine   Machine @relation(fields: [machineId], references: [id])
+
+  problem    String
+  repairCost Decimal? @db.Decimal(10,2)
+
+  repairDate DateTime?
+
+  status RepairStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([machineId])
+  @@map("repairs")
 }
