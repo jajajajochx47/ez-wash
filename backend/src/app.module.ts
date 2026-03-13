@@ -9,6 +9,7 @@ import { IncomeModule } from './income/income.module';
 import { ExpenseModule } from './expense/expense.module';
 import { ExpensecategoryModule } from './expensecategory/expensecategory.module';
 import { RepairModule } from './repair/repair.module';
+import { CollectionModule } from './collection/collection.module';
 
 @Module({
   imports: [
@@ -20,6 +21,6 @@ import { RepairModule } from './repair/repair.module';
         },
       ],
     }),
-    AuthModule, UserModule, TransactionsModule, BranchModule, MachineModule, IncomeModule, ExpenseModule, ExpensecategoryModule, RepairModule],
+    AuthModule, UserModule, TransactionsModule, BranchModule, MachineModule, IncomeModule, ExpenseModule, ExpensecategoryModule, RepairModule, CollectionModule],
 })
 export class AppModule { }
