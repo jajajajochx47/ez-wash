@@ -32,6 +32,7 @@ const labels: Record<string, string> = {
   WASHER: "เครื่องซัก",
   DRYER: "เครื่องอบ",
   VENDING_MACHINE: "ตู้ขายผงซักฟอก",
+  OTHER: "อื่นๆ",
 };
 
 export default function StatusBadge({ status, variant = "default" }: StatusBadgeProps) {

@@ -158,7 +158,15 @@ export default function CollectionsPage() {
                 <label className="block text-[13px] font-semibold text-text mb-1.5">เครื่องซัก/อบ</label>
                 <select value={form.machineId} onChange={e => handleMachineChange(e.target.value)} required className="w-full px-4 py-2.5 rounded-lg border border-border bg-white text-[13px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20">
                   <option value="">เลือกเครื่อง</option>
-                  {machines.map(m => <option key={m.id} value={m.id}>{m.machineCode} ({m.machineType === "WASHER" ? "ซัก" : "อบ"})</option>)}
+                  {machines.map(m => (
+                    <option key={m.id} value={m.id}>
+                      {m.machineCode} ({
+                        m.machineType === "WASHER" ? "ซัก" : 
+                        m.machineType === "DRYER" ? "อบ" : 
+                        m.machineType === "VENDING_MACHINE" ? "ตู้ขายผง" : "อื่นๆ"
+                      })
+                    </option>
+                  ))}
                 </select>
               </div>
               {users.length > 0 && (

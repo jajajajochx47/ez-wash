@@ -46,13 +46,34 @@ interface Activity {
   date?: string;
 }
 
+interface MachineTypeCount {
+  label: string;
+  count: number;
+  percent: number;
+  color: string;
+}
+
+const machineTypeLabels: Record<string, string> = {
+  WASHER: "เครื่องซัก",
+  DRYER: "เครื่องอบ",
+  VENDING_MACHINE: "ตู้ขายผงซักฟอก",
+  OTHER: "อื่นๆ",
+};
+
+const machineTypeColors: Record<string, string> = {
+  WASHER: "#0052CC",
+  DRYER: "#4C9AFF",
+  VENDING_MACHINE: "#FFAB00",
+  OTHER: "#6B778C",
+};
+
 export default function DashboardPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [dailyIncome, setDailyIncome] = useState<{ labels: string[]; data: number[] }>({ labels: [], data: [] });
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [machineRatio, setMachineRatio] = useState({ washer: 0, dryer: 0 });
+  const [machineRatios, setMachineRatios] = useState<MachineTypeCount[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -97,12 +118,13 @@ export default function DashboardPage() {
       if (Array.isArray(actRes.data)) {
         setActivities(actRes.data.slice(0, 5).map((a: any) => {
           const dt = new Date(a.createdAt || a.incomeDate || a.collectedAt);
+          const mType = a.machine?.machineType || "OTHER";
           return {
             time: dt.toLocaleTimeString("th-TH", { hour: '2-digit', minute: '2-digit' }),
             date: dt.toLocaleDateString("th-TH", { day: 'numeric', month: 'short' }),
             branch: a.branch?.name || a.machine?.branch?.name || "-",
             id: a.machine?.machineCode || "-",
-            type: a.machine?.machineType === "WASHER" ? "เครื่องซัก" : "เครื่องอบ",
+            type: machineTypeLabels[mType] || "อื่นๆ",
             amount: Number(a.amount || 0),
             status: "สำเร็จ"
           };
@@ -110,10 +132,21 @@ export default function DashboardPage() {
       }
 
       if (Array.isArray(usageRes.data)) {
-        const washers = usageRes.data.filter((m: any) => m.machineType === "WASHER" || m.machine?.machineType === "WASHER").length;
+        const counts: Record<string, number> = {};
+        usageRes.data.forEach((m: any) => {
+          const type = m.machineType || m.machine?.machineType || "OTHER";
+          counts[type] = (counts[type] || 0) + 1;
+        });
+
         const total = usageRes.data.length || 1;
-        const wPct = Math.round((washers / total) * 100);
-        setMachineRatio({ washer: wPct, dryer: 100 - wPct });
+        const ratios: MachineTypeCount[] = Object.entries(counts).map(([type, count]) => ({
+          label: machineTypeLabels[type] || "อื่นๆ",
+          count,
+          percent: Math.round((count / total) * 100),
+          color: machineTypeColors[type] || "#6B778C",
+        })).sort((a,b) => b.count - a.count);
+        
+        setMachineRatios(ratios);
       }
 
     } catch (err) {
@@ -254,14 +287,14 @@ export default function DashboardPage() {
         <div className="bg-white rounded-2xl border border-border p-6 shadow-sm">
           <h3 className="text-base font-bold text-text mb-6">สัดส่วนประเภทเครื่อง</h3>
           <div className="h-[200px] relative flex justify-center mt-2">
-            {machineRatio.washer + machineRatio.dryer > 0 ? (
+            {machineRatios.length > 0 ? (
               <Doughnut
                 data={{
-                  labels: ["เครื่องซัก", "เครื่องอบ"],
+                  labels: machineRatios.map(r => r.label),
                   datasets: [
                     {
-                      data: [machineRatio.washer, machineRatio.dryer],
-                      backgroundColor: ["#0052CC", "#4C9AFF"],
+                      data: machineRatios.map(r => r.count),
+                      backgroundColor: machineRatios.map(r => r.color),
                       borderWidth: 0,
                       hoverOffset: 4,
                     },
@@ -283,20 +316,15 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="mt-8 space-y-3 px-2">
-            <div className="flex justify-between items-center text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-primary"></div>
-                <span className="text-text-secondary font-medium">เครื่องซัก</span>
+            {machineRatios.map((ratio, idx) => (
+              <div key={idx} className="flex justify-between items-center text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: ratio.color }}></div>
+                  <span className="text-text-secondary font-medium">{ratio.label}</span>
+                </div>
+                <span className="font-bold text-text">{ratio.percent}%</span>
               </div>
-              <span className="font-bold text-text">{machineRatio.washer}%</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-primary-light"></div>
-                <span className="text-text-secondary font-medium">เครื่องอบ</span>
-              </div>
-              <span className="font-bold text-text">{machineRatio.dryer}%</span>
-            </div>
+            ))}
           </div>
         </div>
       </div>

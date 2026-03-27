@@ -93,6 +93,8 @@ model LoginLog {
 enum MachineType {
   WASHER
   DRYER
+  VENDING_MACHINE
+  OTHER
 }
 
 enum MachineStatus {

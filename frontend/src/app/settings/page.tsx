@@ -175,7 +175,7 @@ function MachinesTab() {
           </div>
           
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="block text-[13px] font-bold text-text mb-1.5">ประเภทเครื่อง</label><select value={form.machineType} onChange={e => setForm({...form, machineType: e.target.value})} className="w-full px-4 py-2.5 rounded-lg border border-border bg-body/50 text-[13px] focus:outline-none focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20"><option value="WASHER">เครื่องซักผ้า (Washer)</option><option value="DRYER">เครื่องอบผ้า (Dryer)</option></select></div>
+            <div><label className="block text-[13px] font-bold text-text mb-1.5">ประเภทเครื่อง</label><select value={form.machineType} onChange={e => setForm({...form, machineType: e.target.value})} className="w-full px-4 py-2.5 rounded-lg border border-border bg-body/50 text-[13px] focus:outline-none focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20"><option value="WASHER">เครื่องซักผ้า (Washer)</option><option value="DRYER">เครื่องอบผ้า (Dryer)</option><option value="VENDING_MACHINE">ตู้ขายผงซักฟอก (Vending Machine)</option><option value="OTHER">อื่นๆ (Other)</option></select></div>
             <div><label className="block text-[13px] font-bold text-text mb-1.5">ราคาต่อรอบ (บาท)</label><input type="number" step="0.01" value={form.pricePerUse} onChange={e => setForm({...form, pricePerUse: e.target.value})} required className="w-full px-4 py-2.5 rounded-lg border border-border bg-body/50 text-[13px] font-bold focus:outline-none focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20" /></div>
           </div>
           

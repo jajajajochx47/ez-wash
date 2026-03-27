@@ -10,7 +10,7 @@ const pageTitles: Record<string, string> = {
   "/income": "รายรับ",
   "/expenses": "รายจ่าย",
   // "/collections": "เก็บเงินจากเครื่อง",
-  "/repairs": "ซ่อมบำรุง",
+  // "/repairs": "ซ่อมบำรุง",
   "/reports": "รายงาน",
   "/settings": "ตั้งค่า",
 };

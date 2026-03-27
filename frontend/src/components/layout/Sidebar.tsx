@@ -22,7 +22,7 @@ const navItems = [
   { label: "รายรับ", href: "/income", icon: HiOutlineCurrencyDollar },
   { label: "รายจ่าย", href: "/expenses", icon: HiOutlineCreditCard },
   // { label: "เก็บเงิน", href: "/collections", icon: HiOutlineCollection },
-  { label: "ซ่อมบำรุง", href: "/repairs", icon: MdOutlineHandyman },
+  // { label: "ซ่อมบำรุง", href: "/repairs", icon: MdOutlineHandyman },
   { label: "รายงาน", href: "/reports", icon: HiOutlineDocumentReport },
 ];
 
