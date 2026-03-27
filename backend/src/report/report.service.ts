@@ -27,38 +27,66 @@ export class ReportService {
   }
 
   async dashboard() {
-    const [incomeAgg, expenseAgg, collectionAgg, machineCounts, branchCount] = await Promise.all([
-      this.prisma.income.aggregate({ _sum: { amount: true }, _count: true }),
-      this.prisma.expense.aggregate({ _sum: { amount: true }, _count: true }),
-      this.prisma.machineCollection.aggregate({ _sum: { amount: true }, _count: true }),
-      this.prisma.machine.groupBy({
-        by: ['status'],
-        _count: true,
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [
+      incomeToday, 
+      incomeAllTime, 
+      expenseAllTime, 
+      machines, 
+      pendingRepairs, 
+      alerts
+    ] = await Promise.all([
+      this.prisma.income.aggregate({ 
+        _sum: { amount: true },
+        where: { incomeDate: { gte: today } }
       }),
-      this.prisma.branch.count(),
+      this.prisma.income.aggregate({ _sum: { amount: true } }),
+      this.prisma.expense.aggregate({ _sum: { amount: true } }),
+      this.prisma.machine.aggregate({
+        _count: { id: true },
+      }),
+      this.prisma.repair.count({
+        where: { status: 'PENDING' }
+      }),
+      this.prisma.machine.count({
+        where: { status: 'MAINTENANCE' }
+      }),
     ]);
 
+    const activeMachinesCount = await this.prisma.machine.count({
+      where: { status: 'ACTIVE' }
+    });
+
+    const totalIncome = Number(incomeAllTime._sum.amount ?? 0);
+    const totalExpense = Number(expenseAllTime._sum.amount ?? 0);
+
     return {
-      totals: {
-        income: incomeAgg._sum.amount ?? 0,
-        expense: expenseAgg._sum.amount ?? 0,
-        collection: collectionAgg._sum.amount ?? 0,
-      },
-      counts: {
-        incomes: incomeAgg._count,
-        expenses: expenseAgg._count,
-        collections: collectionAgg._count,
-        branches: branchCount,
-        machines: machineCounts.reduce(
-          (acc, row) => {
-            acc.total += row._count;
-            acc.byStatus[row.status] = row._count;
-            return acc;
-          },
-          { total: 0, byStatus: {} as Record<string, number> },
-        ),
-      },
+      incomeToday: Number(incomeToday._sum.amount ?? 0),
+      totalIncome,
+      totalExpense,
+      netProfit: totalIncome - totalExpense,
+      activeMachines: activeMachinesCount,
+      totalMachines: machines._count.id,
+      pendingJobs: pendingRepairs,
+      alerts: alerts,
     };
+  }
+
+  async recentActivities() {
+    const incomes = await this.prisma.income.findMany({
+      take: 10,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        machine: {
+          include: { branch: true }
+        },
+        branch: true
+      }
+    });
+
+    return incomes;
   }
 
   async incomePerBranch(range?: DateRange) {
@@ -80,8 +108,9 @@ export class ReportService {
     const branchMap = new Map(branches.map((branch) => [branch.id, branch]));
 
     return rows.map((row) => ({
-      branch: branchMap.get(row.branchId) ?? { id: row.branchId, name: 'Unknown', location: null },
-      income: row._sum.amount ?? 0,
+      branchId: row.branchId,
+      branchName: branchMap.get(row.branchId)?.name ?? 'Unknown',
+      totalIncome: Number(row._sum.amount ?? 0),
       count: row._count,
     }));
   }
@@ -111,29 +140,54 @@ export class ReportService {
     const machineMap = new Map(machines.map((machine) => [machine.id, machine]));
 
     return rows.map((row) => ({
-      machine: machineMap.get(row.machineId) ?? { id: row.machineId },
-      income: row._sum.amount ?? 0,
+      machineId: row.machineId,
+      machineCode: machineMap.get(row.machineId)?.machineCode ?? 'Unknown',
+      totalIncome: Number(row._sum.amount ?? 0),
       count: row._count,
     }));
   }
 
   async dailyIncome(range?: DateRange & { branchId?: string; machineId?: string }) {
+    // Default to last 7 days if no range provided
+    const endDate = range?.endDate ? new Date(range.endDate) : new Date();
+    const startDate = range?.startDate ? new Date(range.startDate) : new Date();
+    if (!range?.startDate) {
+      startDate.setDate(endDate.getDate() - 6);
+    }
+    
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+
     const incomes = await this.prisma.income.findMany({
       where: {
         ...(range?.branchId ? { branchId: range.branchId } : {}),
         ...(range?.machineId ? { machineId: range.machineId } : {}),
-        ...this.buildDateFilter('incomeDate', range),
+        incomeDate: {
+          gte: startDate,
+          lte: endDate,
+        },
       },
       select: { incomeDate: true, amount: true },
     });
 
-    const bucket = new Map<string, { date: string; income: number; count: number }>();
+    const bucket = new Map<string, { date: string; totalIncome: number; count: number }>();
+    
+    // Initialize all dates in range with 0
+    const curr = new Date(startDate);
+    while (curr <= endDate) {
+      const dateKey = curr.toISOString().slice(0, 10);
+      bucket.set(dateKey, { date: dateKey, totalIncome: 0, count: 0 });
+      curr.setDate(curr.getDate() + 1);
+    }
+
+    // Fill with actual data
     for (const income of incomes) {
       const dateKey = income.incomeDate.toISOString().slice(0, 10);
-      const entry = bucket.get(dateKey) ?? { date: dateKey, income: 0, count: 0 };
-      entry.income += Number(income.amount);
-      entry.count += 1;
-      bucket.set(dateKey, entry);
+      const entry = bucket.get(dateKey);
+      if (entry) {
+        entry.totalIncome += Number(income.amount);
+        entry.count += 1;
+      }
     }
 
     return Array.from(bucket.values()).sort((a, b) => (a.date < b.date ? -1 : 1));
@@ -159,8 +213,9 @@ export class ReportService {
     const categoryMap = new Map(categories.map((category) => [category.id, category]));
 
     return rows.map((row) => ({
-      category: categoryMap.get(row.categoryId) ?? { id: row.categoryId, name: 'Unknown' },
-      expense: row._sum.amount ?? 0,
+      categoryId: row.categoryId,
+      categoryName: categoryMap.get(row.categoryId)?.name ?? 'Unknown',
+      totalExpense: Number(row._sum.amount ?? 0),
       count: row._count,
     }));
   }
@@ -169,7 +224,7 @@ export class ReportService {
     const incomeWhere = this.buildDateFilter('incomeDate', range);
     const expenseWhere = this.buildDateFilter('expenseDate', range);
 
-    const [incomeAgg, expenseAgg, incomeByBranch, expenseByBranch, branches] = await Promise.all([
+    const [incomeAgg, expenseAgg] = await Promise.all([
       this.prisma.income.aggregate({
         _sum: { amount: true },
         where: incomeWhere,
@@ -178,40 +233,7 @@ export class ReportService {
         _sum: { amount: true },
         where: expenseWhere,
       }),
-      this.prisma.income.groupBy({
-        by: ['branchId'],
-        _sum: { amount: true },
-        where: {
-          ...incomeWhere,
-        },
-      }),
-      this.prisma.expense.groupBy({
-        by: ['branchId'],
-        _sum: { amount: true },
-        where: {
-          ...expenseWhere,
-        },
-      }),
-      this.prisma.branch.findMany({ select: { id: true, name: true } }),
     ]);
-
-    const incomeMap = new Map(
-      incomeByBranch.map((row) => [row.branchId, Number(row._sum.amount ?? 0)]),
-    );
-    const expenseMap = new Map(
-      expenseByBranch.map((row) => [row.branchId, Number(row._sum.amount ?? 0)]),
-    );
-
-    const byBranch = branches.map((branch) => {
-      const income = incomeMap.get(branch.id) ?? 0;
-      const expense = expenseMap.get(branch.id) ?? 0;
-      return {
-        branch,
-        income,
-        expense,
-        profit: income - expense,
-      };
-    });
 
     const totalIncome = Number(incomeAgg._sum.amount ?? 0);
     const totalExpense = Number(expenseAgg._sum.amount ?? 0);
@@ -219,62 +241,21 @@ export class ReportService {
     return {
       totalIncome,
       totalExpense,
-      profit: totalIncome - totalExpense,
-      byBranch,
+      netProfit: totalIncome - totalExpense,
     };
   }
 
   async machineUsage(range?: DateRange & { branchId?: string }) {
-    const [incomeRows, collectionRows, machines] = await Promise.all([
-      this.prisma.income.groupBy({
-        by: ['machineId'],
-        _sum: { amount: true },
-        _count: true,
-        where: {
-          ...(range?.branchId ? { branchId: range.branchId } : {}),
-          ...this.buildDateFilter('incomeDate', range),
-        },
-      }),
-      this.prisma.machineCollection.groupBy({
-        by: ['machineId'],
-        _sum: { amount: true },
-        _count: true,
-        where: {
-          ...this.buildDateFilter('collectedAt', range),
-        },
-      }),
-      this.prisma.machine.findMany({
-        where: {
-          ...(range?.branchId ? { branchId: range.branchId } : {}),
-        },
-        select: {
-          id: true,
-          machineCode: true,
-          machineType: true,
-          status: true,
-          branchId: true,
-        },
-      }),
-    ]);
-
-    const incomeMap = new Map(
-      incomeRows.map((row) => [row.machineId, { total: row._sum.amount ?? 0, count: row._count }]),
-    );
-    const collectionMap = new Map(
-      collectionRows.map((row) => [row.machineId, { total: row._sum.amount ?? 0, count: row._count }]),
-    );
-
-    return machines.map((machine) => {
-      const income = incomeMap.get(machine.id) ?? { total: 0, count: 0 };
-      const collection = collectionMap.get(machine.id) ?? { total: 0, count: 0 };
-      return {
-        machine,
-        incomeTotal: income.total,
-        incomeCount: income.count,
-        collectionTotal: collection.total,
-        collectionCount: collection.count,
-      };
+    const machines = await this.prisma.machine.findMany({
+      where: {
+        ...(range?.branchId ? { branchId: range.branchId } : {}),
+      },
+      include: {
+        branch: true
+      }
     });
+
+    return machines;
   }
 
   async repairReport(range?: DateRange & { status?: string; branchId?: string }) {
@@ -341,8 +322,9 @@ export class ReportService {
     const machineMap = new Map(machines.map((machine) => [machine.id, machine]));
 
     return rows.map((row) => ({
-      machine: machineMap.get(row.machineId) ?? { id: row.machineId },
-      income: Number(row._sum.amount ?? 0),
+      machineId: row.machineId,
+      machineCode: machineMap.get(row.machineId)?.machineCode ?? 'Unknown',
+      totalIncome: Number(row._sum.amount ?? 0),
       count: row._count,
     }));
   }
@@ -367,8 +349,9 @@ export class ReportService {
     const branchMap = new Map(branches.map((branch) => [branch.id, branch]));
 
     return rows.map((row) => ({
-      branch: branchMap.get(row.branchId) ?? { id: row.branchId, name: 'Unknown', location: null },
-      income: Number(row._sum.amount ?? 0),
+      branchId: row.branchId,
+      branchName: branchMap.get(row.branchId)?.name ?? 'Unknown',
+      totalIncome: Number(row._sum.amount ?? 0),
       count: row._count,
     }));
   }
@@ -383,11 +366,11 @@ export class ReportService {
       select: { incomeDate: true, amount: true },
     });
 
-    const bucket = new Map<string, { month: string; income: number; count: number }>();
+    const bucket = new Map<string, { month: string; totalIncome: number; count: number }>();
     for (const income of incomes) {
       const monthKey = income.incomeDate.toISOString().slice(0, 7);
-      const entry = bucket.get(monthKey) ?? { month: monthKey, income: 0, count: 0 };
-      entry.income += Number(income.amount);
+      const entry = bucket.get(monthKey) ?? { month: monthKey, totalIncome: 0, count: 0 };
+      entry.totalIncome += Number(income.amount);
       entry.count += 1;
       bucket.set(monthKey, entry);
     }

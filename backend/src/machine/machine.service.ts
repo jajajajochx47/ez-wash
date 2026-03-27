@@ -7,6 +7,11 @@ import { PrismaService } from '../prisma/prisma.service';
 export class MachineService {
   
   constructor(private prisma: PrismaService) {}
+
+  private readonly standardInclude = {
+    branch: true,
+  };
+
   //create machine
   async create(dto: CreateMachineDto) {
     const machine = await this.prisma.machine.create({
@@ -16,6 +21,7 @@ export class MachineService {
         pricePerUse: dto.pricePerUse,
         branchId: dto.branchId,
       },
+      include: this.standardInclude,
     });
     return machine;
   }
@@ -26,6 +32,7 @@ export class MachineService {
         id,
       },
       data: dto,
+      include: this.standardInclude,
     });
     return machine;
   }
@@ -39,7 +46,9 @@ export class MachineService {
   }
   //find all machine
   async findAll() {
-    const machines = await this.prisma.machine.findMany();
+    const machines = await this.prisma.machine.findMany({
+      include: this.standardInclude,
+    });
     return machines;
   }
   //find one machine
@@ -48,6 +57,7 @@ export class MachineService {
       where: {
         id,
       },
+      include: this.standardInclude,
     });
     return machine;
   }

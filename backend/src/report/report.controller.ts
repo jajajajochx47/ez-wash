@@ -1,6 +1,6 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ReportService } from './report.service';
-
+import { JwtAuthGuard } from '../auth/jwt.guard'; 
 @Controller('report')
 export class ReportController {
   constructor(private readonly reportService: ReportService) {}
@@ -8,6 +8,11 @@ export class ReportController {
   @Get('dashboard')
   dashboard() {
     return this.reportService.dashboard();
+  }
+
+  @Get('recent-activities')
+  recentActivities() {
+    return this.reportService.recentActivities();
   }
 
   @Get('income-per-branch')

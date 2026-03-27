@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
@@ -18,11 +18,47 @@ type CollectionListQuery = {
 export class CollectionService {
   constructor(private prisma: PrismaService) {}
 
+  private readonly standardInclude = {
+    machine: {
+      include: {
+        branch: true,
+      },
+    },
+    collectedBy: true,
+  };
+
   async create(dto: CreateCollectionDto) {
-    const collection = await this.prisma.machineCollection.create({
-      data: dto,
+    const machine = await this.prisma.machine.findUnique({
+      where: { id: dto.machineId },
     });
-    return collection;
+    if (!machine) {
+      throw new NotFoundException('Machine not found');
+    }
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      const collection = await tx.machineCollection.create({
+        data: {
+          ...dto,
+          collectedById: dto.collectedById || null,
+        },
+        include: this.standardInclude,
+      });
+
+      await tx.income.create({
+        data: {
+          machineId: machine.id,
+          branchId: machine.branchId,
+          amount: dto.amount,
+          note: `[ระบบ] เก็บเงินจากตู้ (Collection ID: ${collection.id.substring(0, 8)})`,
+          incomeDate: new Date(),
+          collectionId: collection.id,
+        },
+      });
+
+      return collection;
+    });
+
+    return result;
   }
 
   async findAll(query: CollectionListQuery = {}) {
@@ -52,6 +88,7 @@ export class CollectionService {
         skip,
         take: safeLimit,
         orderBy: { collectedAt: 'desc' },
+        include: this.standardInclude,
       }),
     ]);
 
@@ -71,18 +108,31 @@ export class CollectionService {
       where: {
         id,
       },
+      include: this.standardInclude,
     });
     return collection;
   }
 
   async update(id: string, dto: UpdateCollectionDto) {
-    const collection = await this.prisma.machineCollection.update({
-      where: {
-        id,
-      },
-      data: dto,
+    const result = await this.prisma.$transaction(async (tx) => {
+      const collection = await tx.machineCollection.update({
+        where: { id },
+        data: dto,
+        include: this.standardInclude,
+      });
+
+      if (dto.amount !== undefined) {
+        const linkedIncome = await tx.income.findFirst({ where: { collectionId: id } });
+        if (linkedIncome) {
+          await tx.income.update({
+            where: { id: linkedIncome.id },
+            data: { amount: dto.amount },
+          });
+        }
+      }
+      return collection;
     });
-    return collection;
+    return result;
   }
 
   async remove(id: string) {

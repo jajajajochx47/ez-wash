@@ -147,6 +147,7 @@ model Machine {
   collections MachineCollection[]
   repairs     Repair[]
 
+
   @@unique([machineCode, branchId])
   @@index([branchId])
   @@map("machines")
@@ -169,6 +170,8 @@ model MachineCollection {
 
   collectedAt DateTime @default(now())
   createdAt   DateTime @default(now())
+
+  income      Income?
 
   @@index([machineId])
   @@map("machine_collections")
@@ -193,6 +196,9 @@ model Income {
 
   incomeDate DateTime
   createdAt  DateTime @default(now())
+
+  collectionId String? @unique
+  collection   MachineCollection? @relation(fields: [collectionId], references: [id], onDelete: Cascade)
 
   @@index([machineId])
   @@index([branchId])

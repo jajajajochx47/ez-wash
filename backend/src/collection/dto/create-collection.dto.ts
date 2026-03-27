@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsDecimal } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateCollectionDto {
   @IsString()
@@ -6,10 +6,10 @@ export class CreateCollectionDto {
   machineId: string;
 
   @IsString()
-  @IsNotEmpty()
-  collectedById: string;
+  @IsOptional()
+  collectedById?: string;
 
-  @IsDecimal()
+  @IsNumber()
   @IsNotEmpty()
   amount: number;
 }

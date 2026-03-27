@@ -18,9 +18,22 @@ type IncomeListQuery = {
 export class IncomeService {
   constructor(private prisma: PrismaService) {}
 
+  private readonly standardInclude = {
+    machine: {
+      include: {
+        branch: true,
+      },
+    },
+    branch: true,
+  };
+
   async create(dto: CreateIncomeDto) {
     const income = await this.prisma.income.create({
-      data: dto,
+      data: {
+        ...dto,
+        incomeDate: new Date(dto.incomeDate),
+      },
+      include: this.standardInclude,
     });
     return income;
   }
@@ -51,6 +64,7 @@ export class IncomeService {
         skip,
         take: safeLimit,
         orderBy: { incomeDate: 'desc' },
+        include: this.standardInclude,
       }),
     ]);
 
@@ -70,51 +84,66 @@ export class IncomeService {
       where: {
         id,
       },
+      include: this.standardInclude,
     });
     return income;
   }
+
   async findByBranchId(branchId: string) {
     const incomes = await this.prisma.income.findMany({
       where: {
         branchId,
       },
+      include: this.standardInclude,
     });
     return incomes;
   }
+
   async findByMachineId(machineId: string) {
     const incomes = await this.prisma.income.findMany({
       where: {
         machineId,
       },
+      include: this.standardInclude,
     });
     return incomes;
   }
+
   async findByDate(date: string) {
     const incomes = await this.prisma.income.findMany({
       where: {
-        incomeDate: date,
+        incomeDate: new Date(date),
       },
+      include: this.standardInclude,
     });
     return incomes;
   }
+
   async findByBranchIdAndMachineId(branchId: string, machineId: string) {
     const incomes = await this.prisma.income.findMany({
       where: {
         branchId,
         machineId,
       },
+      include: this.standardInclude,
     });
     return incomes;
   }
+
   async update(id: string, dto: UpdateIncomeDto) {
     const income = await this.prisma.income.update({
       where: {
         id,
       },
-      data: dto,
+      data: {
+        ...dto,
+        incomeDate: dto.incomeDate ? new Date(dto.incomeDate) : undefined,
+      },
+      include: this.standardInclude,
     });
     return income;
   }
+
   async remove(id: string) {
     const income = await this.prisma.income.delete({
       where: {

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsDecimal } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber } from 'class-validator';
 
 export class CreateRepairDto {
   @IsString()
@@ -9,7 +9,7 @@ export class CreateRepairDto {
   @IsNotEmpty()
   problem: string;
 
-  @IsDecimal()
+  @IsNumber()
   @IsOptional()
   repairCost?: number;
 

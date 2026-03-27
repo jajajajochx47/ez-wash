@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-primary: #0052cc;
+  --color-primary-light: #4c9aff;
+  --color-primary-dark: #0040a5;
+  --color-accent: #00875a;
+  --color-accent-light: #e3fcef;
+  --color-accent-dark: #006644;
+  --color-sidebar-bg: #ffffff;
+  --color-sidebar-hover: #f4f5f7;
+  --color-sidebar-active: #e6effc;
+  --color-sidebar-active-text: #0052cc;
+  --color-card: #ffffff;
+  --color-body: #f4f5f7;
+  --color-text: #172b4d;
+  --color-text-secondary: #5e6c84;
+  --color-text-muted: #8993a4;
+  --color-border: #dfe1e6;
+  --color-border-light: #f4f5f7;
+  --color-chart-bar: #0052cc;
+  --color-chart-bar-light: #b3d4ff;
+  --color-highlight: #ffab00;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--color-body);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d4;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b0b0b0;
+}
+
+/* Smooth transitions */
+a, button {
+  transition: all 0.15s ease;
+}
+
+/* Chart canvas responsive */
+canvas {
+  max-width: 100% !important;
+}
+
+/* Custom input styling */
+input, select, textarea {
+  font-family: var(--font-sans);
+}
+
+/* Structural Layout Guarantees to prevent Tailwind cache bugs */
+@media (min-width: 1024px) {
+  .lg-content-margin {
+    margin-left: 256px !important;
+  }
+  .lg-sidebar-width {
+    width: 256px !important;
+  }
+}
+
+.sidebar-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px 16px !important;
+  margin: 4px 12px !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.sidebar-logo-padding {
+  padding: 32px 24px 24px 24px !important;
+}
+
+.main-content-padding {
+  padding: 16px !important;
+}
+@media (min-width: 1024px) {
+  .main-content-padding {
+    padding: 32px !important;
+  }
+}
+
+/* Fallback utilities to bypass Tailwind v4 frozen cache in Next.js Turbopack */
+.p-2 { padding: 0.5rem !important; }
+.p-3 { padding: 0.75rem !important; }
+.p-4 { padding: 1rem !important; }
+.p-5 { padding: 1.25rem !important; }
+.p-6 { padding: 1.5rem !important; }
+.p-8 { padding: 2rem !important; }
+.px-4 { padding-left: 1rem !important; padding-right: 1rem !important; }
+.px-5 { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+.px-6 { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
+.px-8 { padding-left: 2rem !important; padding-right: 2rem !important; }
+.py-2 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+.py-3 { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; }
+.py-4 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+.py-5 { padding-top: 1.25rem !important; padding-bottom: 1.25rem !important; }
+.py-6 { padding-top: 1.5rem !important; padding-bottom: 1.5rem !important; }
+.pt-3 { padding-top: 0.75rem !important; }
+.pt-4 { padding-top: 1rem !important; }
+.pt-5 { padding-top: 1.25rem !important; }
+.pt-6 { padding-top: 1.5rem !important; }
+.mb-1\.5 { margin-bottom: 0.375rem !important; }
+.mb-2 { margin-bottom: 0.5rem !important; }
+.space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.75rem !important; }
+.space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem !important; }
+.space-y-5 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.25rem !important; }
+.space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.5rem !important; }
+.gap-2 { gap: 0.5rem !important; }
+.gap-3 { gap: 0.75rem !important; }
+.gap-4 { gap: 1rem !important; }
+.gap-5 { gap: 1.25rem !important; }
+.gap-6 { gap: 1.5rem !important; }
+.rounded-xl { border-radius: 0.75rem !important; }
+.rounded-2xl { border-radius: 1rem !important; }
+.rounded-\[20px\] { border-radius: 20px !important; }
+.rounded-\[24px\] { border-radius: 24px !important; }
+.h-\[250px\] { height: 250px !important; }
+.h-\[280px\] { height: 280px !important; }
+.h-\[600px\] { height: 600px !important; }

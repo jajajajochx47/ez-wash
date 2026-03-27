@@ -18,9 +18,18 @@ type ExpenseListQuery = {
 export class ExpenseService {
   constructor(private prisma: PrismaService) {}
 
+  private readonly standardInclude = {
+    branch: true,
+    category: true,
+  };
+
   async create(dto: CreateExpenseDto) {
     const expense = await this.prisma.expense.create({
-      data: dto,
+      data: {
+        ...dto,
+        expenseDate: new Date(dto.expenseDate),
+      },
+      include: this.standardInclude,
     });
     return expense;
   }
@@ -51,6 +60,7 @@ export class ExpenseService {
         skip,
         take: safeLimit,
         orderBy: { expenseDate: 'desc' },
+        include: this.standardInclude,
       }),
     ]);
 
@@ -70,51 +80,66 @@ export class ExpenseService {
       where: {
         id,
       },
+      include: this.standardInclude,
     });
     return expense;
   }
+
   async findByBranchId(branchId: string) {
     const expenses = await this.prisma.expense.findMany({
       where: {
         branchId,
       },
+      include: this.standardInclude,
     });
     return expenses;
   }
+
   async findByCategoryId(categoryId: string) {
     const expenses = await this.prisma.expense.findMany({
       where: {
         categoryId,
       },
+      include: this.standardInclude,
     });
     return expenses;
   }
+
   async findByDate(date: string) {
     const expenses = await this.prisma.expense.findMany({
       where: {
-        expenseDate: date,
+        expenseDate: new Date(date),
       },
+      include: this.standardInclude,
     });
     return expenses;
   }
+
   async findByBranchIdAndCategoryId(branchId: string, categoryId: string) {
     const expenses = await this.prisma.expense.findMany({
       where: {
         branchId,
         categoryId,
       },
+      include: this.standardInclude,
     });
     return expenses;
   }
+
   async update(id: string, dto: UpdateExpenseDto) {
     const expense = await this.prisma.expense.update({
       where: {
         id,
       },
-      data: dto,
+      data: {
+        ...dto,
+        expenseDate: dto.expenseDate ? new Date(dto.expenseDate) : undefined,
+      },
+      include: this.standardInclude,
     });
     return expense;
   }
+
   async remove(id: string) {
     const expense = await this.prisma.expense.delete({
       where: {
