@@ -114,60 +114,112 @@ function MachinesTab() {
   const [filterBranch, setFilterBranch] = useState("");
   const [form, setForm] = useState({ machineCode: "", machineType: "WASHER", pricePerUse: "", branchId: "", status: "ACTIVE" });
 
-  const fetchAll = async () => { try { const [m, b] = await Promise.all([api.get("/machine"), api.get("/branch")]); let d = Array.isArray(m.data) ? m.data : []; if (filterBranch) d = d.filter((x: Machine) => x.branchId === filterBranch || x.branch?.id === filterBranch); setItems(d); setBranches(b.data); } catch { toast.error("โหลดไม่สำเร็จ"); } finally { setLoading(false); } };
+  const typeInfo: Record<string, { label: string; icon: string; bg: string; border: string }> = {
+    WASHER: { label: "เครื่องซักผ้า", icon: "🫧", bg: "bg-blue-50", border: "border-blue-100" },
+    DRYER: { label: "เครื่องอบผ้า", icon: "🔥", bg: "bg-amber-50", border: "border-amber-100" },
+    VENDING_MACHINE: { label: "ตู้ขายผงซักฟอก", icon: "🛒", bg: "bg-orange-50", border: "border-orange-100" },
+    OTHER: { label: "อื่นๆ", icon: "📦", bg: "bg-gray-50", border: "border-gray-100" },
+  };
+
+  const fetchAll = async () => { 
+    try { 
+      const [m, b] = await Promise.all([api.get("/machine"), api.get("/branch")]); 
+      let d = Array.isArray(m.data) ? m.data : []; 
+      if (filterBranch) d = d.filter((x: Machine) => x.branchId === filterBranch || x.branch?.id === filterBranch); 
+      setItems(d); 
+      setBranches(b.data); 
+    } catch { 
+      toast.error("โหลดไม่สำเร็จ"); 
+    } finally { 
+      setLoading(false); 
+    } 
+  };
+  
   useEffect(() => { fetchAll(); }, [filterBranch]);
 
   const openAdd = () => { setEditing(null); setForm({ machineCode: "", machineType: "WASHER", pricePerUse: "", branchId: "", status: "ACTIVE" }); setModalOpen(true); };
   const openEdit = (item: Machine) => { setEditing(item); setForm({ machineCode: item.machineCode, machineType: item.machineType, pricePerUse: String(item.pricePerUse), branchId: item.branchId || item.branch?.id || "", status: item.status }); setModalOpen(true); };
-  const handleSubmit = async (e: React.FormEvent) => { e.preventDefault(); try { const p = { ...form, pricePerUse: Number(form.pricePerUse) }; if (editing) { await api.patch(`/machine/${editing.id}`, p); } else { await api.post("/machine", p); } toast.success("สำเร็จ"); setModalOpen(false); fetchAll(); } catch { toast.error("ไม่สำเร็จ"); } };
-  const handleDelete = async (id: string) => { if (!confirm("ลบเครื่องซัก/อบนี้ใช่หรือไม่? ข้อมูลรายรับจะถูกลบไปด้วย")) return; try { await api.delete(`/machine/${id}`); toast.success("ลบสำเร็จ"); fetchAll(); } catch { toast.error("ลบไม่สำเร็จ กรุณาตรวจสอบข้อมูลที่ผูกอยู่"); } };
+  
+  const handleSubmit = async (e: React.FormEvent) => { 
+    e.preventDefault(); 
+    try { 
+      const p = { ...form, pricePerUse: Number(form.pricePerUse) }; 
+      if (editing) { await api.patch(`/machine/${editing.id}`, p); } 
+      else { await api.post("/machine", p); } 
+      toast.success("สำเร็จ"); 
+      setModalOpen(false); 
+      fetchAll(); 
+    } catch { 
+      toast.error("ไม่สำเร็จ"); 
+    } 
+  };
+
+  const handleDelete = async (id: string) => { 
+    if (!confirm("ลบเครื่องนี้ใช่หรือไม่? ข้อมูลประวัติรายรับจะหายไปด้วย")) return; 
+    try { 
+      await api.delete(`/machine/${id}`); 
+      toast.success("ลบสำเร็จ"); 
+      fetchAll(); 
+    } catch { 
+      toast.error("ลบไม่สำเร็จ กรุณาตรวจสอบข้อมูลที่ผูกอยู่"); 
+    } 
+  };
 
   if (loading) return <LoadingSpinner />;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center mb-6">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-text">จัดการเครื่องซัก/อบ</h2>
-          <select value={filterBranch} onChange={e => setFilterBranch(e.target.value)} className="px-3 py-1.5 rounded-lg border border-border bg-body/50 text-[13px] text-text font-medium focus:outline-none focus:bg-white focus:border-primary/50"><option value="">ทุกสาขา</option>{branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select>
+          <h2 className="text-lg font-bold text-text">จัดการเครื่องซัก/อบ และเครื่องจำหน่าย</h2>
+          <select value={filterBranch} onChange={e => setFilterBranch(e.target.value)} className="px-3 py-1.5 rounded-lg border border-border bg-body/50 text-[13px] text-text font-medium focus:outline-none focus:bg-white focus:border-primary/50">
+            <option value="">ทุกสาขา</option>
+            {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+          </select>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 px-5 py-2 rounded-lg bg-primary text-white shadow-md shadow-primary/20 text-[13px] font-semibold hover:bg-primary-dark transition-all"><HiOutlinePlus className="w-4 h-4" /> เพิ่มเครื่องใหม่</button>
+        <button onClick={openAdd} className="flex items-center gap-2 px-5 py-2 rounded-lg bg-primary text-white shadow-md shadow-primary/20 text-[13px] font-semibold hover:bg-primary-dark transition-all">
+          <HiOutlinePlus className="w-4 h-4" /> เพิ่มเครื่องใหม่
+        </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-        {items.map(item => (
-          <div key={item.id} className="bg-white rounded-xl p-5 border border-border shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-between">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-inner ${item.machineType === "WASHER" ? "bg-blue-50 border border-blue-100" : "bg-amber-50 border border-amber-100"}`}>{item.machineType === "WASHER" ? "🫧" : "🔥"}</div>
-                <div>
-                  <h4 className="text-[16px] font-bold text-text">{item.machineCode}</h4>
-                  <p className="text-[12px] font-medium text-text-secondary">{item.machineType === "WASHER" ? "เครื่องซักผ้า" : "เครื่องอบผ้า"}</p>
+        {items.map(item => {
+          const info = typeInfo[item.machineType] || typeInfo.OTHER;
+          return (
+            <div key={item.id} className="bg-white rounded-xl p-5 border border-border shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-between">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-inner ${info.bg} ${info.border}`}>{info.icon}</div>
+                  <div>
+                    <h4 className="text-[16px] font-bold text-text">{item.machineCode}</h4>
+                    <p className="text-[12px] font-medium text-text-secondary">{info.label}</p>
+                  </div>
                 </div>
+                <StatusBadge status={item.status} variant="machine" />
               </div>
-              <StatusBadge status={item.status} variant="machine" />
-            </div>
-            
-            <div className="bg-body/50 p-3 rounded-lg flex items-center justify-between mb-4">
-               <div>
-                 <p className="text-[11px] text-text-secondary">สาขาประจำ</p>
-                 <p className="text-[13px] font-bold text-text mt-0.5">{item.branch?.name || "-"}</p>
-               </div>
-               <div className="text-right">
-                 <p className="text-[11px] text-text-secondary">ราคาเริ่มต้น</p>
-                 <p className="text-[14px] font-bold text-primary mt-0.5">฿{Number(item.pricePerUse).toLocaleString()}</p>
-               </div>
-            </div>
+              
+              <div className="bg-body/50 p-3 rounded-lg flex items-center justify-between mb-4">
+                 <div>
+                   <p className="text-[11px] text-text-secondary">สาขาประจำ</p>
+                   <p className="text-[13px] font-bold text-text mt-0.5">{item.branch?.name || "-"}</p>
+                 </div>
+                 <div className="text-right">
+                   <p className="text-[11px] text-text-secondary">ราคาเริ่มต้น</p>
+                   <p className="text-[14px] font-bold text-primary mt-0.5">฿{Number(item.pricePerUse).toLocaleString()}</p>
+                 </div>
+              </div>
 
-            <div className="flex justify-end gap-2 border-t border-border pt-4">
-              <button onClick={() => openEdit(item)} className="px-3 py-1.5 rounded-lg text-[12px] font-bold text-text-secondary bg-body border border-border hover:text-primary hover:border-primary/30 transition-colors">ตั้งค่าเครื่อง</button>
-              <button onClick={() => handleDelete(item.id)} className="p-1.5 rounded-lg text-text-muted hover:text-red-500 hover:bg-red-50 transition-colors ml-2"><HiOutlineTrash className="w-4 h-4" /></button>
+              <div className="flex justify-end gap-2 border-t border-border pt-4">
+                <button onClick={() => openEdit(item)} className="px-3 py-1.5 rounded-lg text-[12px] font-bold text-text-secondary bg-body border border-border hover:text-primary hover:border-primary/30 transition-colors">ตั้งค่าเครื่อง</button>
+                <button onClick={() => handleDelete(item.id)} className="p-1.5 rounded-lg text-text-muted hover:text-red-500 hover:bg-red-50 transition-colors ml-2"><HiOutlineTrash className="w-4 h-4" /></button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {items.length === 0 && <p className="text-text-muted col-span-full text-center py-12 text-[14px]">ยังไม่มีเครื่องในระบบ</p>}
       </div>
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editing ? "แก้ไขเครื่องซัก/อบ" : "เพิ่มเครื่องใหม่"}>
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editing ? "แก้ไขเครื่อง" : "เพิ่มเครื่องใหม่"}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div><label className="block text-[13px] font-bold text-text mb-1.5">รหัสเครื่อง (Code)</label><input type="text" value={form.machineCode} onChange={e => setForm({...form, machineCode: e.target.value})} required className="w-full px-4 py-2.5 rounded-lg border border-border bg-body/50 text-[13px] focus:outline-none focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20" placeholder="เช่น W-01" /></div>
