@@ -41,8 +41,11 @@ export default function Sidebar() {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="sidebar-logo-padding">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl font-bold text-primary tracking-tight">EZ Wash</span>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-border shadow-sm">
+            <img src="/logo.png" alt="Ma Der Logo" className="w-full h-full object-cover" />
+          </div>
+          <span className="text-xl font-bold text-primary tracking-tight">Ma Der ซักผ้า</span>
         </div>
       </div>
 
@@ -70,19 +73,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom Section */}
-      <div className="px-3 pb-2">
-        {/* Upgrade card */}
-        <div className="bg-body rounded-2xl p-4 mb-4">
-          <p className="text-[13px] font-semibold text-primary mb-1">EZ Wash Pro</p>
-          <p className="text-[11px] text-text-secondary mb-3 leading-relaxed">
-            อัปเกรดเพื่อใช้งาน<br/>ฟีเจอร์เพิ่มเติม
-          </p>
-          <button className="w-full py-2 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-light transition-colors">
-            Upgrade
-          </button>
-        </div>
-
-        {/* Bottom nav items */}
+      <div className="px-3 pb-6 mt-auto">
         {bottomNavItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -103,12 +94,11 @@ export default function Sidebar() {
           );
         })}
 
-        {/* Logout */}
         <button
           onClick={logout}
-          className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-[14px] font-medium text-text-secondary hover:bg-sidebar-hover hover:text-red-500 transition-all w-full"
+          className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-[14px] font-medium text-text-secondary hover:bg-sidebar-hover hover:text-red-500 transition-all w-full mt-2"
         >
-          <HiOutlineLogout className="w-[20px] h-[20px] text-text-muted" />
+          <HiOutlineLogout className="w-[20px] h-[20px] text-text-muted transition-colors" />
           ออกจากระบบ
         </button>
       </div>

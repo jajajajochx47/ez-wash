@@ -26,14 +26,6 @@ export default function Header() {
         {/* Left: Title */}
         <div className="flex items-center gap-4">
           <div className="w-10 lg:hidden" />
-          <div>
-            <h2 className="text-[20px] font-bold text-text tracking-tight">
-              Welcome back, {user?.name?.split(" ")[0] || "Admin"}!
-            </h2>
-            <p className="text-[13px] text-text-secondary mt-0.5">
-              It is the best time to manage your business
-            </p>
-          </div>
         </div>
 
         {/* Right: Search + Avatar */}
@@ -53,7 +45,6 @@ export default function Header() {
             </div>
             <div className="hidden sm:block">
               <p className="text-[13px] font-semibold text-text">{user?.name || "Admin"}</p>
-              <p className="text-[11px] text-text-secondary">Administrator</p>
             </div>
           </div>
         </div>

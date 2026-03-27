@@ -6,7 +6,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   const config = new DocumentBuilder()
-    .setTitle('EZ Wash API')
+    .setTitle('Ma Der API')
     .setDescription('API documentation')
     .setVersion('1.0')
     .build();

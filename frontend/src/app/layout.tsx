@@ -5,8 +5,8 @@ import AppShell from "@/components/layout/AppShell";
 import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
-  title: "EZ Wash - ระบบจัดการร้านสะดวกซัก",
-  description: "ระบบบริหารจัดการร้านซักผ้าหยอดเหรียญ EZ Wash",
+  title: "Ma Der ซักผ้า - ระบบจัดการร้านสะดวกซัก",
+  description: "ระบบบริหารจัดการร้านซักผ้าหยอดเหรียญ Ma Der ซักผ้า",
 };
 
 export default function RootLayout({

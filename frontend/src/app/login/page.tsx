@@ -34,11 +34,11 @@ export default function LoginPage() {
         <div>
           {/* Logo */}
           <div className="text-center flex flex-col items-center justify-center" style={{ marginBottom: "32px" }}>
-            <div className="bg-[#0052cc]/10 flex items-center justify-center" style={{ width: "64px", height: "64px", borderRadius: "16px", marginBottom: "20px" }}>
-              <span className="text-3xl font-bold text-primary">EZ</span>
+            <div className="w-[140px] h-[140px] rounded-2xl overflow-hidden bg-white border border-border shadow-sm mb-6 p-2 flex items-center justify-center">
+              <img src="/logo.png" alt="Ma Der Logo" className="w-full h-full object-contain" />
             </div>
-            <h1 className="font-bold text-text" style={{ fontSize: "28px", marginBottom: "8px" }}>เข้าสู่ระบบ EZ Wash</h1>
-            <p className="text-text-secondary" style={{ fontSize: "14px" }}>ยินดีต้อนรับกลับเข้าสู่ระบบจัดการร้านสะดวกซัก</p>
+            <h1 className="font-bold text-text" style={{ fontSize: "26px", marginBottom: "8px" }}>เข้าสู่ระบบ Ma Der ซักผ้า</h1>
+            <p className="text-text-secondary font-medium" style={{ fontSize: "14px" }}>ยินดีต้อนรับกลับเข้าสู่ระบบจัดการร้านสะดวกซัก</p>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col" style={{ gap: "24px" }}>
