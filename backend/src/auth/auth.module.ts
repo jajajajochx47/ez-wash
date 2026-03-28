@@ -7,9 +7,11 @@ import { JwtStrategy } from './jwt.strategy';
 
 @Module({
    imports: [
-    JwtModule.register({
-      secret: 'supersecret',
-      signOptions: { expiresIn: '15m' },
+    JwtModule.registerAsync({
+      useFactory: () => ({
+        secret: process.env.JWT_SECRET || 'supersecret',
+        signOptions: { expiresIn: '15m' },
+      }),
     }),
   ],
   controllers: [AuthController],

@@ -4,7 +4,9 @@
 
 import React, { useEffect, useState } from "react";
 import api from "@/lib/api";
+import { exportCsv } from "@/lib/exportCsv";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import toast from "react-hot-toast";
 import { HiOutlineDownload, HiOutlineChartBar } from "react-icons/hi";
 import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, ArcElement, Title, Tooltip, Legend, Filler,
@@ -68,7 +70,43 @@ export default function ReportsPage() {
           <h1 className="text-2xl font-bold text-text flex items-center gap-2"><HiOutlineChartBar className="w-6 h-6 text-primary" /> สรุปยอดและรายงาน (Reports)</h1>
           <p className="text-sm text-text-secondary mt-1">วิเคราะห์ข้อมูลประสิทธิภาพของสาขาและการใช้งานเครื่อง</p>
         </div>
-        <button className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-primary text-white shadow-md shadow-primary/20 text-[13px] font-bold hover:bg-primary-dark active:scale-[0.98] transition-all">
+        <button onClick={() => {
+          // Build a combined summary report
+          type Row = { section: string; label: string; value: number };
+          const rows: Row[] = [];
+
+          // Profit summary
+          rows.push({ section: "สรุปภาพรวม", label: "รายรับรวม", value: profitSummary.income });
+          rows.push({ section: "สรุปภาพรวม", label: "รายจ่ายรวม", value: profitSummary.expense });
+          rows.push({ section: "สรุปภาพรวม", label: "กำไรสุทธิ", value: profitSummary.profit });
+
+          // Income by branch
+          incomeByBranch.labels.forEach((label, i) => {
+            rows.push({ section: "รายได้แต่ละสาขา", label, value: incomeByBranch.data[i] });
+          });
+
+          // Monthly income
+          monthlyIncome.labels.forEach((label, i) => {
+            rows.push({ section: "รายได้รายเดือน", label, value: monthlyIncome.data[i] });
+          });
+
+          // Expense summary
+          expenseSummary.labels.forEach((label, i) => {
+            rows.push({ section: "ค่าใช้จ่ายตามหมวดหมู่", label, value: expenseSummary.data[i] });
+          });
+
+          // Top machines
+          topMachines.labels.forEach((label, i) => {
+            rows.push({ section: "เครื่องทำเงินสูงสุด", label, value: topMachines.data[i] });
+          });
+
+          exportCsv("full_report", [
+            { header: "หมวด", accessor: (r: Row) => r.section },
+            { header: "รายการ", accessor: (r: Row) => r.label },
+            { header: "จำนวนเงิน (บาท)", accessor: (r: Row) => r.value },
+          ], rows);
+          toast.success("ส่งออก CSV สำเร็จ");
+        }} className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-primary text-white shadow-md shadow-primary/20 text-[13px] font-bold hover:bg-primary-dark active:scale-[0.98] transition-all">
           <HiOutlineDownload className="w-4 h-4" /> Export Report (CSV)
         </button>
       </div>

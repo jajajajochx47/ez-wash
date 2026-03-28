@@ -1,3 +1,5 @@
+import "dotenv/config"
+
 import { PrismaClient, MachineType } from "@prisma/client"
 import * as bcrypt from "bcrypt"
 
@@ -17,7 +19,7 @@ async function main() {
     create: { name: "ADMIN" }
   })
 
-  const userRole = await prisma.role.upsert({
+  await prisma.role.upsert({
     where: { name: "USER" },
     update: {},
     create: { name: "USER" }
@@ -29,7 +31,8 @@ async function main() {
   // 2. Admin User
   //////////////////////////////////////////////////
 
-  const passwordHash = await bcrypt.hash("admin1234", 10)
+  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD || "admin1234"
+  const passwordHash = await bcrypt.hash(adminPassword, 10)
 
   await prisma.user.upsert({
     where: { email: "admin@admin.com" },
@@ -65,51 +68,6 @@ async function main() {
   }
 
   console.log("✅ Expense categories seeded")
-
-  //////////////////////////////////////////////////
-  // 4. Default Branch
-  //////////////////////////////////////////////////
-
-  const branch = await prisma.branch.upsert({
-    where: { name: "สาขาหลัก" },
-    update: {},
-    create: {
-      name: "สาขาหลัก",
-      location: "หน้าบ้าน"
-    }
-  })
-
-  console.log("✅ Branch created")
-
-  //////////////////////////////////////////////////
-  // 5. Machines
-  //////////////////////////////////////////////////
-
-  const machines = [
-    { code: "W01", type: MachineType.WASHER, price: 40 },
-    { code: "W02", type: MachineType.WASHER, price: 40 },
-    { code: "D01", type: MachineType.DRYER, price: 30 }
-  ]
-
-  for (const m of machines) {
-    await prisma.machine.upsert({
-      where: {
-        machineCode_branchId: {
-          machineCode: m.code,
-          branchId: branch.id
-        }
-      },
-      update: {},
-      create: {
-        machineCode: m.code,
-        machineType: m.type,
-        pricePerUse: m.price,
-        branchId: branch.id
-      }
-    })
-  }
-
-  console.log("✅ Machines seeded")
 
   console.log("🌱 Seed completed!")
 }

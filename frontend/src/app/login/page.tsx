@@ -48,7 +48,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="developer@ezwash.com"
+                placeholder="admin@ma-der.com"
                 className="w-full px-4 py-3 rounded-xl bg-body/50 border border-border text-text placeholder-text-muted text-[14px] focus:bg-white focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
               />
             </div>

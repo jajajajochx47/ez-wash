@@ -4,10 +4,12 @@
 
 import React, { useEffect, useState } from "react";
 import api from "@/lib/api";
+import { exportCsv } from "@/lib/exportCsv";
 import Modal from "@/components/ui/Modal";
+import CsvImportModal, { ColumnMapping } from "@/components/ui/CsvImportModal";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import toast from "react-hot-toast";
-import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineFilter, HiOutlineDownload } from "react-icons/hi";
+import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineFilter, HiOutlineDownload, HiOutlineUpload } from "react-icons/hi";
 
 interface Branch { id: string; name: string; }
 interface Machine { id: string; machineCode: string; machineType: string; branch?: Branch; }
@@ -23,6 +25,7 @@ export default function IncomePage() {
   const [summary, setSummary] = useState({ income: 0, expense: 0, profit: 0 });
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [editing, setEditing] = useState<Income | null>(null);
   const [filterBranch, setFilterBranch] = useState("");
   const [filterDate, setFilterDate] = useState("");
@@ -90,8 +93,21 @@ export default function IncomePage() {
           <p className="text-sm text-text-secondary mt-1">จัดการและตรวจสอบรายรับของแต่ละสาขา</p>
         </div>
         <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-white text-text-secondary hover:text-text hover:bg-body transition-all text-[13px] font-medium shadow-sm">
+          <button onClick={() => {
+            exportCsv("income_report", [
+              { header: "วันที่", accessor: (r: Income) => new Date(r.incomeDate).toLocaleDateString("th-TH") },
+              { header: "สาขา", accessor: (r: Income) => r.branch?.name || "-" },
+              { header: "เครื่อง", accessor: (r: Income) => r.machine?.machineCode || "-" },
+              { header: "ประเภทเครื่อง", accessor: (r: Income) => r.machine?.machineType || "-" },
+              { header: "จำนวนเงิน (บาท)", accessor: (r: Income) => Number(r.amount) },
+              { header: "หมายเหตุ", accessor: (r: Income) => r.note || "-" },
+            ], items);
+            toast.success("ส่งออก CSV สำเร็จ");
+          }} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-white text-text-secondary hover:text-text hover:bg-body transition-all text-[13px] font-medium shadow-sm">
             <HiOutlineDownload className="w-4 h-4" /> Export
+          </button>
+          <button onClick={() => setImportModalOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-white text-text-secondary hover:text-text hover:bg-body transition-all text-[13px] font-medium shadow-sm">
+            <HiOutlineUpload className="w-4 h-4" /> Import CSV
           </button>
           <button onClick={openAdd} className="flex items-center gap-2 px-5 py-2 rounded-lg bg-primary text-white shadow-md shadow-primary/20 text-[13px] font-semibold hover:bg-primary-dark active:scale-[0.98] transition-all">
             <HiOutlinePlus className="w-4 h-4" /> เพิ่มรายรับ
@@ -233,6 +249,64 @@ export default function IncomePage() {
           </div>
         </form>
       </Modal>
+
+      <CsvImportModal<{ machineId: string; branchId: string; amount: number; note: string; incomeDate: string }>
+        isOpen={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        title="นำเข้ารายรับจาก CSV"
+        templateHeaders={["วันที่", "สาขา", "เครื่อง", "จำนวนเงิน", "หมายเหตุ"]}
+        columns={[
+          {
+            field: "incomeDate", label: "วันที่", csvHeaders: ["วันที่", "date", "incomeDate"],
+            required: true,
+            transform: (v) => {
+              // Try to parse various date formats → YYYY-MM-DD
+              const d = new Date(v);
+              return isNaN(d.getTime()) ? v : d.toISOString().slice(0, 10);
+            },
+          },
+          {
+            field: "branchId", label: "สาขา", csvHeaders: ["สาขา", "branch", "branchName"],
+            required: true,
+            transform: (v) => {
+              const found = branches.find((b) => b.name.toLowerCase() === v.toLowerCase());
+              return found?.id || v;
+            },
+          },
+          {
+            field: "machineId", label: "เครื่อง", csvHeaders: ["เครื่อง", "machine", "machineCode"],
+            required: true,
+            transform: (v) => {
+              const found = machines.find((m) => m.machineCode.toLowerCase() === v.toLowerCase());
+              return found?.id || v;
+            },
+          },
+          {
+            field: "amount", label: "จำนวนเงิน", csvHeaders: ["จำนวนเงิน", "จำนวนเงิน (บาท)", "amount"],
+            required: true,
+            transform: (v) => Number(v.replace(/[^0-9.-]/g, "")) || 0,
+          },
+          {
+            field: "note", label: "หมายเหตุ", csvHeaders: ["หมายเหตุ", "note", "notes"],
+            transform: (v) => v,
+          },
+        ] as ColumnMapping<{ machineId: string; branchId: string; amount: number; note: string; incomeDate: string }>[]}
+        onImport={async (rows) => {
+          let success = 0;
+          let fail = 0;
+          for (const row of rows) {
+            try {
+              await api.post("/income", row);
+              success++;
+            } catch {
+              fail++;
+            }
+          }
+          if (fail > 0) toast.error(`นำเข้าสำเร็จ ${success} รายการ, ล้มเหลว ${fail} รายการ`);
+          else toast.success(`นำเข้าสำเร็จทั้งหมด ${success} รายการ`);
+          fetchAll();
+        }}
+      />
     </div>
   );
 }

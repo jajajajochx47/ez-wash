@@ -1,0 +1,19 @@
+services:
+  # Backend Server
+  - type: web
+    name: ma-der-api
+    env: node
+    region: singapore
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && npm run start:prod
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATABASE_URL
+        sync: false # Set this in the Render dashboard (e.g. Neon DB URL)
+      - key: JWT_SECRET
+        generateValue: true # Render will generate a strong secret
+      - key: CORS_ORIGIN
+        sync: false # e.g. https://ma-der.vercel.app
+      - key: ADMIN_DEFAULT_PASSWORD
+        sync: false # The password you want for the first login

@@ -4,10 +4,12 @@
 
 import React, { useEffect, useState } from "react";
 import api from "@/lib/api";
+import { exportCsv } from "@/lib/exportCsv";
 import Modal from "@/components/ui/Modal";
+import CsvImportModal, { ColumnMapping } from "@/components/ui/CsvImportModal";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import toast from "react-hot-toast";
-import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineFilter, HiOutlineDownload } from "react-icons/hi";
+import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineFilter, HiOutlineDownload, HiOutlineUpload } from "react-icons/hi";
 
 interface Branch { id: string; name: string; }
 interface ExpenseCategory { id: string; name: string; }
@@ -20,6 +22,7 @@ export default function ExpensesPage() {
   const [summary, setSummary] = useState({ income: 0, expense: 0, profit: 0 });
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [filterBranch, setFilterBranch] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
@@ -77,8 +80,20 @@ export default function ExpensesPage() {
           <p className="text-sm text-text-secondary mt-1">บันทึกและตรวจสอบค่าใช้จ่ายต่างๆ ของกิจการ</p>
         </div>
         <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-white text-text-secondary hover:text-text hover:bg-body transition-all text-[13px] font-medium shadow-sm">
+          <button onClick={() => {
+            exportCsv("expense_report", [
+              { header: "วันที่", accessor: (r: Expense) => new Date(r.expenseDate).toLocaleDateString("th-TH") },
+              { header: "สาขา", accessor: (r: Expense) => r.branch?.name || "-" },
+              { header: "หมวดหมู่", accessor: (r: Expense) => r.category?.name || "-" },
+              { header: "จำนวนเงิน (บาท)", accessor: (r: Expense) => Number(r.amount) },
+              { header: "รายละเอียด", accessor: (r: Expense) => r.description || "-" },
+            ], items);
+            toast.success("ส่งออก CSV สำเร็จ");
+          }} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-white text-text-secondary hover:text-text hover:bg-body transition-all text-[13px] font-medium shadow-sm">
             <HiOutlineDownload className="w-4 h-4" /> Export
+          </button>
+          <button onClick={() => setImportModalOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-white text-text-secondary hover:text-text hover:bg-body transition-all text-[13px] font-medium shadow-sm">
+            <HiOutlineUpload className="w-4 h-4" /> Import CSV
           </button>
           <button onClick={openAdd} className="flex items-center gap-2 px-5 py-2 rounded-lg bg-red-600 text-white shadow-md shadow-red-600/20 text-[13px] font-semibold hover:bg-red-700 active:scale-[0.98] transition-all">
             <HiOutlinePlus className="w-4 h-4" /> เพิ่มรายจ่าย
@@ -212,6 +227,63 @@ export default function ExpensesPage() {
           </div>
         </form>
       </Modal>
+
+      <CsvImportModal<{ branchId: string; categoryId: string; amount: number; description: string; expenseDate: string }>
+        isOpen={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        title="นำเข้ารายจ่ายจาก CSV"
+        templateHeaders={["วันที่", "สาขา", "หมวดหมู่", "จำนวนเงิน", "รายละเอียด"]}
+        columns={[
+          {
+            field: "expenseDate", label: "วันที่", csvHeaders: ["วันที่", "date", "expenseDate"],
+            required: true,
+            transform: (v) => {
+              const d = new Date(v);
+              return isNaN(d.getTime()) ? v : d.toISOString().slice(0, 10);
+            },
+          },
+          {
+            field: "branchId", label: "สาขา", csvHeaders: ["สาขา", "branch", "branchName"],
+            required: true,
+            transform: (v) => {
+              const found = branches.find((b) => b.name.toLowerCase() === v.toLowerCase());
+              return found?.id || v;
+            },
+          },
+          {
+            field: "categoryId", label: "หมวดหมู่", csvHeaders: ["หมวดหมู่", "category", "categoryName"],
+            required: true,
+            transform: (v) => {
+              const found = categories.find((c) => c.name.toLowerCase() === v.toLowerCase());
+              return found?.id || v;
+            },
+          },
+          {
+            field: "amount", label: "จำนวนเงิน", csvHeaders: ["จำนวนเงิน", "จำนวนเงิน (บาท)", "amount"],
+            required: true,
+            transform: (v) => Number(v.replace(/[^0-9.-]/g, "")) || 0,
+          },
+          {
+            field: "description", label: "รายละเอียด", csvHeaders: ["รายละเอียด", "description", "note"],
+            transform: (v) => v,
+          },
+        ] as ColumnMapping<{ branchId: string; categoryId: string; amount: number; description: string; expenseDate: string }>[]}
+        onImport={async (rows) => {
+          let success = 0;
+          let fail = 0;
+          for (const row of rows) {
+            try {
+              await api.post("/expense", row);
+              success++;
+            } catch {
+              fail++;
+            }
+          }
+          if (fail > 0) toast.error(`นำเข้าสำเร็จ ${success} รายการ, ล้มเหลว ${fail} รายการ`);
+          else toast.success(`นำเข้าสำเร็จทั้งหมด ${success} รายการ`);
+          fetchAll();
+        }}
+      />
     </div>
   );
 }
