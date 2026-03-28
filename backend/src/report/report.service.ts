@@ -18,10 +18,22 @@ export class ReportService {
       return undefined;
     }
 
+    let gteDate: Date | undefined;
+    if (range?.startDate) {
+      gteDate = new Date(range.startDate);
+      gteDate.setHours(0, 0, 0, 0);
+    }
+
+    let lteDate: Date | undefined;
+    if (range?.endDate) {
+      lteDate = new Date(range.endDate);
+      lteDate.setHours(23, 59, 59, 999);
+    }
+
     return {
       [field]: {
-        ...(range?.startDate ? { gte: new Date(range.startDate) } : {}),
-        ...(range?.endDate ? { lte: new Date(range.endDate) } : {}),
+        ...(gteDate ? { gte: gteDate } : {}),
+        ...(lteDate ? { lte: lteDate } : {}),
       },
     };
   }

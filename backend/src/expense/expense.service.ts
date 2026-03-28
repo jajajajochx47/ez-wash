@@ -46,11 +46,23 @@ export class ExpenseService {
     if (query.categoryId) where.categoryId = query.categoryId;
 
     if (query.date) {
-      where.expenseDate = new Date(query.date);
+      const dayStart = new Date(query.date);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(query.date);
+      dayEnd.setHours(23, 59, 59, 999);
+      where.expenseDate = { gte: dayStart, lte: dayEnd };
     } else if (query.startDate || query.endDate) {
       where.expenseDate = {};
-      if (query.startDate) where.expenseDate.gte = new Date(query.startDate);
-      if (query.endDate) where.expenseDate.lte = new Date(query.endDate);
+      if (query.startDate) {
+        const start = new Date(query.startDate);
+        start.setHours(0, 0, 0, 0);
+        where.expenseDate.gte = start;
+      }
+      if (query.endDate) {
+        const end = new Date(query.endDate);
+        end.setHours(23, 59, 59, 999);
+        where.expenseDate.lte = end;
+      }
     }
 
     const [total, expenses] = await this.prisma.$transaction([

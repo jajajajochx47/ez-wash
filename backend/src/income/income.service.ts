@@ -50,11 +50,23 @@ export class IncomeService {
     if (query.machineId) where.machineId = query.machineId;
 
     if (query.date) {
-      where.incomeDate = new Date(query.date);
+      const dayStart = new Date(query.date);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(query.date);
+      dayEnd.setHours(23, 59, 59, 999);
+      where.incomeDate = { gte: dayStart, lte: dayEnd };
     } else if (query.startDate || query.endDate) {
       where.incomeDate = {};
-      if (query.startDate) where.incomeDate.gte = new Date(query.startDate);
-      if (query.endDate) where.incomeDate.lte = new Date(query.endDate);
+      if (query.startDate) {
+        const start = new Date(query.startDate);
+        start.setHours(0, 0, 0, 0);
+        where.incomeDate.gte = start;
+      }
+      if (query.endDate) {
+        const end = new Date(query.endDate);
+        end.setHours(23, 59, 59, 999);
+        where.incomeDate.lte = end;
+      }
     }
 
     const [total, incomes] = await this.prisma.$transaction([
