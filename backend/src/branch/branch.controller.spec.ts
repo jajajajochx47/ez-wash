@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BranchController } from './branch.controller';
 import { BranchService } from './branch.service';
+import { prismaProvider } from '../test-utils/mock-prisma.service';
 
 describe('BranchController', () => {
   let controller: BranchController;
@@ -8,7 +9,7 @@ describe('BranchController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BranchController],
-      providers: [BranchService],
+      providers: [BranchService, prismaProvider],
     }).compile();
 
     controller = module.get<BranchController>(BranchController);

@@ -2,13 +2,20 @@
 
 import React from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
+
+  React.useEffect(() => {
+    if (!isLoading && !isAuthenticated && pathname !== "/login") {
+      router.replace("/login");
+    }
+  }, [isAuthenticated, isLoading, pathname, router]);
 
   if (pathname === "/login") {
     return <>{children}</>;
@@ -26,7 +33,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated) {
-    return <>{children}</>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-body">
+        <div className="w-10 h-10 rounded-xl bg-primary animate-pulse" />
+      </div>
+    );
   }
 
   return (

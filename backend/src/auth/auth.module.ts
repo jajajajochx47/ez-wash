@@ -9,7 +9,9 @@ import { JwtStrategy } from './jwt.strategy';
    imports: [
     JwtModule.registerAsync({
       useFactory: () => ({
-        secret: process.env.JWT_SECRET || 'supersecret',
+        secret: process.env.JWT_SECRET || (process.env.NODE_ENV === 'production'
+          ? (() => { throw new Error('JWT_SECRET is required in production'); })()
+          : 'supersecret'),
         signOptions: { expiresIn: '15m' },
       }),
     }),

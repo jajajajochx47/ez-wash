@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { ExpensecategoryService } from './expensecategory.service';
 import { CreateExpensecategoryDto } from './dto/create-expensecategory.dto';
 import { UpdateExpensecategoryDto } from './dto/update-expensecategory.dto';
+import { JwtAuthGuard } from '../auth/jwt.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('expensecategory')
 export class ExpensecategoryController {
   constructor(private readonly expensecategoryService: ExpensecategoryService) {}
