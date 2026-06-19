@@ -38,14 +38,16 @@ export class ReportService {
     };
   }
 
-  async dashboard() {
+  async dashboard(range?: DateRange) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const incomeWhere = this.buildDateFilter('incomeDate', range);
+    const expenseWhere = this.buildDateFilter('expenseDate', range);
 
     const [
       incomeToday, 
-      incomeAllTime, 
-      expenseAllTime, 
+      incomeInRange, 
+      expenseInRange, 
       machines, 
       pendingRepairs, 
       alerts
@@ -54,8 +56,8 @@ export class ReportService {
         _sum: { amount: true },
         where: { incomeDate: { gte: today } }
       }),
-      this.prisma.income.aggregate({ _sum: { amount: true } }),
-      this.prisma.expense.aggregate({ _sum: { amount: true } }),
+      this.prisma.income.aggregate({ _sum: { amount: true }, where: incomeWhere }),
+      this.prisma.expense.aggregate({ _sum: { amount: true }, where: expenseWhere }),
       this.prisma.machine.aggregate({
         _count: { id: true },
       }),
@@ -71,8 +73,8 @@ export class ReportService {
       where: { status: 'ACTIVE' }
     });
 
-    const totalIncome = Number(incomeAllTime._sum.amount ?? 0);
-    const totalExpense = Number(expenseAllTime._sum.amount ?? 0);
+    const totalIncome = Number(incomeInRange._sum.amount ?? 0);
+    const totalExpense = Number(expenseInRange._sum.amount ?? 0);
 
     return {
       incomeToday: Number(incomeToday._sum.amount ?? 0),

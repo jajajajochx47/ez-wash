@@ -67,6 +67,41 @@ const machineTypeColors: Record<string, string> = {
   OTHER: "#6B778C",
 };
 
+const periodOptions = [
+  { label: "วันนี้", value: "today" },
+  { label: "7 วัน", value: "7days" },
+  { label: "30 วัน", value: "30days" },
+  { label: "ปีนี้", value: "year" },
+] as const;
+
+type PeriodValue = (typeof periodOptions)[number]["value"];
+
+function formatDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function getPeriodRange(period: PeriodValue) {
+  const end = new Date();
+  const start = new Date();
+
+  if (period === "7days") {
+    start.setDate(end.getDate() - 6);
+  } else if (period === "30days") {
+    start.setDate(end.getDate() - 29);
+  } else if (period === "year") {
+    start.setMonth(0, 1);
+  }
+
+  return {
+    startDate: formatDate(start),
+    endDate: formatDate(end),
+  };
+}
+
 export default function DashboardPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
@@ -74,6 +109,7 @@ export default function DashboardPage() {
   const [dailyIncome, setDailyIncome] = useState<{ labels: string[]; data: number[] }>({ labels: [], data: [] });
   const [activities, setActivities] = useState<Activity[]>([]);
   const [machineRatios, setMachineRatios] = useState<MachineTypeCount[]>([]);
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodValue>("today");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -82,23 +118,27 @@ export default function DashboardPage() {
       return;
     }
     if (isAuthenticated) fetchDashboard();
-  }, [isAuthenticated, authLoading]);
+  }, [isAuthenticated, authLoading, selectedPeriod]);
 
   const fetchDashboard = async () => {
+    setLoading(true);
     try {
-      const [dashRes, dailyRes, actRes, usageRes] = await Promise.all([
-        api.get("/report/dashboard").catch(() => ({ data: {} })),
-        api.get("/report/daily-income").catch(() => ({ data: [] })),
+      const params = getPeriodRange(selectedPeriod);
+      const [dashRes, profitRes, dailyRes, actRes, usageRes] = await Promise.all([
+        api.get("/report/dashboard", { params }).catch(() => ({ data: {} })),
+        api.get("/report/profit-summary", { params }).catch(() => ({ data: {} })),
+        api.get("/report/daily-income", { params }).catch(() => ({ data: [] })),
         api.get("/report/recent-activities").catch(() => ({ data: [] })),
         api.get("/report/machine-usage").catch(() => ({ data: [] })),
       ]);
       
       const d = dashRes.data;
+      const profit = profitRes.data;
       setData({
         incomeToday: d.incomeToday || 0,
-        totalIncome: d.totalIncome || 0,
-        totalExpense: d.totalExpense || 0,
-        netProfit: d.netProfit || 0,
+        totalIncome: profit.totalIncome ?? d.totalIncome ?? 0,
+        totalExpense: profit.totalExpense ?? d.totalExpense ?? 0,
+        netProfit: profit.netProfit ?? d.netProfit ?? 0,
         activeMachines: d.activeMachines || 0,
         totalMachines: d.totalMachines || 0,
         pendingJobs: d.pendingJobs || 0,
@@ -168,16 +208,18 @@ export default function DashboardPage() {
           <p className="text-sm text-text-secondary mt-1">ภาพรวมการทำงานและรายได้ของกิจการ</p>
         </div>
         <div className="flex items-center gap-1 bg-white rounded-lg border border-border p-1 shadow-sm">
-          {["วันนี้", "7 วัน", "30 วัน", "ปีนี้"].map((period, i) => (
+          {periodOptions.map((period) => (
             <button
-              key={period}
+              key={period.value}
+              type="button"
+              onClick={() => setSelectedPeriod(period.value)}
               className={`px-4 py-1.5 rounded-md text-[13px] font-medium transition-all ${
-                i === 0
+                selectedPeriod === period.value
                   ? "bg-primary text-white shadow-sm"
                   : "text-text-secondary hover:text-text hover:bg-body"
               }`}
             >
-              {period}
+              {period.label}
             </button>
           ))}
         </div>

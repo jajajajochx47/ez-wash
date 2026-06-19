@@ -7,8 +7,8 @@ export class ReportController {
   constructor(private readonly reportService: ReportService) {}
 
   @Get('dashboard')
-  dashboard() {
-    return this.reportService.dashboard();
+  dashboard(@Query('startDate') startDate?: string, @Query('endDate') endDate?: string) {
+    return this.reportService.dashboard({ startDate, endDate });
   }
 
   @Get('recent-activities')
