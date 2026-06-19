@@ -87,12 +87,13 @@ export default function IncomePage() {
     <div className="space-y-6">
       
       {/* Title & Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-text">รายรับ (Income)</h1>
-          <p className="text-sm text-text-secondary mt-1">จัดการและตรวจสอบรายรับของแต่ละสาขา</p>
+      <div className="page-hero flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
+        <div className="relative z-10">
+          <p className="page-eyebrow">Income Management</p>
+          <h1 className="page-title">รายรับ</h1>
+          <p className="page-subtitle">จัดการ ตรวจสอบ และนำเข้ารายรับของแต่ละสาขา</p>
         </div>
-        <div className="flex gap-2">
+        <div className="relative z-10 flex flex-wrap gap-2">
           <button onClick={() => {
             exportCsv("income_report", [
               { header: "วันที่", accessor: (r: Income) => new Date(r.incomeDate).toLocaleDateString("th-TH") },
@@ -103,13 +104,13 @@ export default function IncomePage() {
               { header: "หมายเหตุ", accessor: (r: Income) => r.note || "-" },
             ], items);
             toast.success("ส่งออก CSV สำเร็จ");
-          }} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-white text-text-secondary hover:text-text hover:bg-body transition-all text-[13px] font-medium shadow-sm">
+          }} className="btn-secondary-modern flex items-center gap-2 px-4 py-2 text-[13px] transition-all">
             <HiOutlineDownload className="w-4 h-4" /> Export
           </button>
-          <button onClick={() => setImportModalOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-white text-text-secondary hover:text-text hover:bg-body transition-all text-[13px] font-medium shadow-sm">
+          <button onClick={() => setImportModalOpen(true)} className="btn-secondary-modern flex items-center gap-2 px-4 py-2 text-[13px] transition-all">
             <HiOutlineUpload className="w-4 h-4" /> Import CSV
           </button>
-          <button onClick={openAdd} className="flex items-center gap-2 px-5 py-2 rounded-lg bg-primary text-white shadow-md shadow-primary/20 text-[13px] font-semibold hover:bg-primary-dark active:scale-[0.98] transition-all">
+          <button onClick={openAdd} className="btn-primary-modern flex items-center gap-2 px-5 py-2 text-[13px] active:scale-[0.98] transition-all">
             <HiOutlinePlus className="w-4 h-4" /> เพิ่มรายรับ
           </button>
         </div>
@@ -117,7 +118,7 @@ export default function IncomePage() {
 
       {/* Summary Bar */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl p-5 border border-border shadow-sm flex items-center justify-between border-l-4 border-l-blue-500">
+        <div className="soft-card p-5 flex items-center justify-between border-l-4 border-l-blue-500">
           <div>
             <p className="text-[13px] font-semibold text-text-secondary">รายรับรวม (Total Income)</p>
             <h3 className="text-2xl font-bold text-text mt-1">฿{summary.income.toLocaleString()}</h3>
@@ -126,7 +127,7 @@ export default function IncomePage() {
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-5 border border-border shadow-sm flex items-center justify-between border-l-4 border-l-red-500">
+        <div className="soft-card p-5 flex items-center justify-between border-l-4 border-l-red-500">
           <div>
             <p className="text-[13px] font-semibold text-text-secondary">รายจ่ายรวม (Total Expense)</p>
             <h3 className="text-2xl font-bold text-text mt-1">฿{summary.expense.toLocaleString()}</h3>
@@ -135,7 +136,7 @@ export default function IncomePage() {
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-5 border border-border shadow-sm flex items-center justify-between border-l-4 border-l-emerald-500 bg-emerald-50/20">
+        <div className="soft-card p-5 flex items-center justify-between border-l-4 border-l-emerald-500">
           <div>
             <p className="text-[13px] font-semibold text-text-secondary">กำไรสุทธิ (Net Profit)</p>
             <h3 className="text-2xl font-bold text-emerald-600 mt-1">฿{summary.profit.toLocaleString()}</h3>
@@ -147,7 +148,7 @@ export default function IncomePage() {
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-xl border border-border shadow-sm flex flex-col sm:flex-row gap-3 items-center">
+      <div className="toolbar-panel p-4 flex flex-col sm:flex-row gap-3 items-center">
         <div className="flex items-center gap-2 text-text-secondary mr-2">
           <HiOutlineFilter className="w-5 h-5" />
           <span className="text-[13px] font-medium text-text">ตัวกรอง:</span>
@@ -160,7 +161,7 @@ export default function IncomePage() {
       </div>
 
       {/* Data Table */}
-      <div className="bg-white rounded-xl border shadow-sm border-border overflow-hidden">
+      <div className="surface-panel overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-[13px] whitespace-nowrap">
             <thead className="bg-[#f8f9fa]">

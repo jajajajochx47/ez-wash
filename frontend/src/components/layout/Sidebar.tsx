@@ -8,21 +8,17 @@ import {
   HiOutlineViewGrid,
   HiOutlineCurrencyDollar,
   HiOutlineCreditCard,
-  HiOutlineCollection,
   HiOutlineCog,
   HiOutlineDocumentReport,
   HiOutlineX,
   HiOutlineMenu,
   HiOutlineLogout,
 } from "react-icons/hi";
-import { MdOutlineHandyman } from "react-icons/md";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: HiOutlineViewGrid },
   { label: "รายรับ", href: "/income", icon: HiOutlineCurrencyDollar },
   { label: "รายจ่าย", href: "/expenses", icon: HiOutlineCreditCard },
-  // { label: "เก็บเงิน", href: "/collections", icon: HiOutlineCollection },
-  // { label: "ซ่อมบำรุง", href: "/repairs", icon: MdOutlineHandyman },
   { label: "รายงาน", href: "/reports", icon: HiOutlineDocumentReport },
 ];
 
@@ -41,11 +37,14 @@ export default function Sidebar() {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="sidebar-logo-padding">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-border shadow-sm">
+        <div className="flex items-center gap-3 rounded-2xl border border-border bg-white p-3 shadow-sm">
+          <div className="w-11 h-11 rounded-2xl overflow-hidden bg-white border border-border shadow-sm">
             <img src="/logo.png" alt="Ma Der Logo" className="w-full h-full object-cover" />
           </div>
-          <span className="text-xl font-bold text-primary tracking-tight">Ma Der ซักผ้า</span>
+          <div>
+            <span className="block text-lg font-extrabold text-text tracking-tight">Ma Der</span>
+            <span className="block text-[11px] font-semibold text-text-muted uppercase tracking-[0.14em]">Laundry Admin</span>
+          </div>
         </div>
       </div>
 
@@ -61,11 +60,11 @@ export default function Sidebar() {
               onClick={() => setMobileOpen(false)}
               className={`sidebar-link ${
                 active
-                  ? "bg-sidebar-active text-sidebar-active-text"
-                  : "text-text-secondary hover:bg-sidebar-hover hover:text-text"
+                  ? "bg-sidebar-active text-sidebar-active-text shadow-md shadow-primary/20"
+                  : "text-text-secondary hover:bg-sidebar-hover hover:text-primary"
               }`}
             >
-              <Icon className={`w-[20px] h-[20px] ${active ? "text-primary" : "text-text-muted transition-colors group-hover:text-text"}`} />
+              <Icon className={`w-[20px] h-[20px] ${active ? "text-white" : "text-text-muted transition-colors group-hover:text-primary"}`} />
               {item.label}
             </Link>
           );
@@ -84,11 +83,11 @@ export default function Sidebar() {
               onClick={() => setMobileOpen(false)}
               className={`sidebar-link ${
                 active
-                  ? "bg-sidebar-active text-sidebar-active-text"
-                  : "text-text-secondary hover:bg-sidebar-hover hover:text-text"
+                  ? "bg-sidebar-active text-sidebar-active-text shadow-md shadow-primary/20"
+                  : "text-text-secondary hover:bg-sidebar-hover hover:text-primary"
               }`}
             >
-              <Icon className={`w-[20px] h-[20px] ${active ? "text-primary" : "text-text-muted transition-colors group-hover:text-text"}`} />
+              <Icon className={`w-[20px] h-[20px] ${active ? "text-white" : "text-text-muted transition-colors group-hover:text-primary"}`} />
               {item.label}
             </Link>
           );
@@ -96,7 +95,7 @@ export default function Sidebar() {
 
         <button
           onClick={logout}
-          className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-[14px] font-medium text-text-secondary hover:bg-sidebar-hover hover:text-red-500 transition-all w-full mt-2"
+          className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-[14px] font-semibold text-text-secondary hover:bg-red-50 hover:text-red-500 transition-all w-full mt-2"
         >
           <HiOutlineLogout className="w-[20px] h-[20px] text-text-muted transition-colors" />
           ออกจากระบบ
@@ -110,7 +109,7 @@ export default function Sidebar() {
       {/* Mobile hamburger button */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-white border border-border text-primary lg:hidden hover:bg-sidebar-hover transition-colors"
+        className="fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-white/90 backdrop-blur border border-border text-primary shadow-sm lg:hidden hover:bg-sidebar-hover transition-colors"
       >
         <HiOutlineMenu className="w-5 h-5" />
       </button>
@@ -125,7 +124,7 @@ export default function Sidebar() {
 
       {/* Mobile drawer */}
       <aside
-        className={`fixed top-0 left-0 h-full w-[260px] bg-sidebar-bg border-r border-border z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+        className={`fixed top-0 left-0 h-full w-[260px] bg-white/95 backdrop-blur-xl border-r border-border z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -139,7 +138,7 @@ export default function Sidebar() {
       </aside>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg-sidebar-width lg:fixed lg:inset-y-0 bg-sidebar-bg border-r border-border z-40 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+      <aside className="hidden lg:flex lg:flex-col lg-sidebar-width lg:fixed lg:inset-y-0 bg-white/85 backdrop-blur-xl border-r border-white/70 z-40 shadow-[18px_0_50px_rgba(15,23,42,0.06)]">
         {renderNavContent()}
       </aside>
     </>

@@ -32,6 +32,7 @@ export default function ReportsPage() {
   const [topMachines, setTopMachines] = useState<{ labels: string[]; data: number[] }>({ labels: [], data: [] });
 
   const params = { startDate: startDate || undefined, endDate: endDate || undefined, branchId: filterBranch || undefined };
+  const isAllDateRange = !startDate && !endDate;
 
   const fetchAll = async () => {
     setLoading(true);
@@ -65,10 +66,11 @@ export default function ReportsPage() {
     <div className="space-y-6">
       
       {/* Title & Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-text flex items-center gap-2"><HiOutlineChartBar className="w-6 h-6 text-primary" /> สรุปยอดและรายงาน (Reports)</h1>
-          <p className="text-sm text-text-secondary mt-1">วิเคราะห์ข้อมูลประสิทธิภาพของสาขาและการใช้งานเครื่อง</p>
+      <div className="page-hero flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
+        <div className="relative z-10">
+          <p className="page-eyebrow">Analytics & Export</p>
+          <h1 className="page-title flex items-center gap-2"><HiOutlineChartBar className="w-7 h-7 text-primary" /> รายงาน</h1>
+          <p className="page-subtitle">วิเคราะห์ข้อมูลประสิทธิภาพของสาขา เครื่อง และภาพรวมกำไร</p>
         </div>
         <button onClick={() => {
           // Build a combined summary report
@@ -106,13 +108,27 @@ export default function ReportsPage() {
             { header: "จำนวนเงิน (บาท)", accessor: (r: Row) => r.value },
           ], rows);
           toast.success("ส่งออก CSV สำเร็จ");
-        }} className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-primary text-white shadow-md shadow-primary/20 text-[13px] font-bold hover:bg-primary-dark active:scale-[0.98] transition-all">
+        }} className="relative z-10 btn-primary-modern flex items-center gap-2 px-6 py-2.5 text-[13px] active:scale-[0.98] transition-all">
           <HiOutlineDownload className="w-4 h-4" /> Export Report (CSV)
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 bg-white rounded-2xl p-5 border border-border shadow-sm items-center">
+      <div className="toolbar-panel flex flex-col sm:flex-row gap-3 p-5 items-center">
         <label className="text-[13px] font-bold text-text whitespace-nowrap hidden sm:block">ตั้งค่าตัวกรอง:</label>
+        <button
+          type="button"
+          onClick={() => {
+            setStartDate("");
+            setEndDate("");
+          }}
+          className={`w-full sm:w-auto px-4 py-2 rounded-lg border text-[13px] font-medium transition-all ${
+            isAllDateRange
+              ? "bg-primary text-white border-primary shadow-sm"
+              : "border-border bg-body/50 text-text-secondary hover:text-text hover:bg-white"
+          }`}
+        >
+          ทั้งหมด
+        </button>
         <div className="flex items-center gap-2 text-[13px] text-text-secondary w-full sm:w-auto">
           <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full sm:w-auto px-4 py-2 rounded-lg border border-border bg-body/50 text-[13px] focus:outline-none focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
           <span className="font-medium text-text">ถึง</span>
@@ -128,17 +144,17 @@ export default function ReportsPage() {
       {loading ? <LoadingSpinner /> : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <div className="bg-white rounded-[20px] p-6 border-2 border-primary shadow-sm hover:shadow-md transition-shadow">
+            <div className="soft-card p-6 border-l-4 border-l-primary hover:shadow-md transition-shadow">
               <p className="text-[13px] font-bold text-text-secondary">รายรับรวมทั้งหมด</p>
               <h3 className="text-[32px] font-bold text-text mt-1 tracking-tight">฿{fmt(profitSummary.income)}</h3>
               <p className="text-[12px] text-primary font-medium mt-2">คำนวณจากช่วงเวลาที่เลือก</p>
             </div>
-            <div className="bg-white rounded-[20px] p-6 border border-border bg-gradient-to-br from-white to-red-50/30 shadow-sm hover:shadow-md transition-shadow">
+            <div className="soft-card p-6 border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
               <p className="text-[13px] font-bold text-text-secondary">รายจ่ายรวม</p>
               <h3 className="text-[32px] font-bold text-red-600 mt-1 tracking-tight">฿{fmt(profitSummary.expense)}</h3>
               <p className="text-[12px] text-text-muted mt-2">ค่าใช้จ่ายผันแปรและคงที่</p>
             </div>
-            <div className="bg-emerald-50 rounded-[20px] p-6 border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
+            <div className="soft-card p-6 border-l-4 border-l-emerald-500 hover:shadow-md transition-shadow">
               <p className="text-[13px] font-bold text-emerald-800">กำไรสุทธิ</p>
               <h3 className="text-[32px] font-bold text-emerald-600 mt-1 tracking-tight">฿{fmt(profitSummary.profit)}</h3>
               <p className="text-[12px] text-emerald-600 font-medium mt-2">สุทธิหลังหักลบรายจ่าย</p>
@@ -146,7 +162,7 @@ export default function ReportsPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl p-6 border border-border shadow-sm">
+            <div className="surface-panel p-6">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-[15px] font-bold text-text">เปรียบเทียบรายได้แต่ละสาขา</h3>
               </div>
@@ -155,7 +171,7 @@ export default function ReportsPage() {
               </div>
             </div>
             
-            <div className="bg-white rounded-2xl p-6 border border-border shadow-sm">
+            <div className="surface-panel p-6">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-[15px] font-bold text-text">แนวโน้มรายได้รายเดือน</h3>
               </div>
@@ -164,7 +180,7 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 border border-border shadow-sm">
+            <div className="surface-panel p-6">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-[15px] font-bold text-text">สัดส่วนค่าใช้จ่ายตามหมวดหมู่</h3>
               </div>
@@ -173,7 +189,7 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 border border-border shadow-sm lg:row-span-2">
+            <div className="surface-panel p-6 lg:row-span-2">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-[15px] font-bold text-text">จัดอันดับเครื่องทำเงินสูงสุด (Top 10)</h3>
               </div>
@@ -182,7 +198,7 @@ export default function ReportsPage() {
               </div>
             </div>
             
-            <div className="bg-white rounded-2xl p-6 border border-border shadow-sm">
+            <div className="surface-panel p-6">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-[15px] font-bold text-text">รายรับแยกตามเครื่องซัก/อบรวม</h3>
               </div>

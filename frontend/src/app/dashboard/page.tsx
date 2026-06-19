@@ -68,6 +68,7 @@ const machineTypeColors: Record<string, string> = {
 };
 
 const periodOptions = [
+  { label: "ทั้งหมด", value: "all" },
   { label: "วันนี้", value: "today" },
   { label: "7 วัน", value: "7days" },
   { label: "30 วัน", value: "30days" },
@@ -85,6 +86,10 @@ function formatDate(date: Date) {
 }
 
 function getPeriodRange(period: PeriodValue) {
+  if (period === "all") {
+    return {};
+  }
+
   const end = new Date();
   const start = new Date();
 
@@ -102,6 +107,18 @@ function getPeriodRange(period: PeriodValue) {
   };
 }
 
+function getPeriodLabel(period: PeriodValue) {
+  return periodOptions.find((option) => option.value === period)?.label || "ทั้งหมด";
+}
+
+function getTrendTitle(period: PeriodValue) {
+  if (period === "all") return "Trend รายได้รายเดือน (ทั้งหมด)";
+  if (period === "today") return "Trend รายได้วันนี้";
+  if (period === "7days") return "Trend รายได้ 7 วันล่าสุด";
+  if (period === "30days") return "Trend รายได้ 30 วันล่าสุด";
+  return "Trend รายได้ปีนี้";
+}
+
 export default function DashboardPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
@@ -109,7 +126,7 @@ export default function DashboardPage() {
   const [dailyIncome, setDailyIncome] = useState<{ labels: string[]; data: number[] }>({ labels: [], data: [] });
   const [activities, setActivities] = useState<Activity[]>([]);
   const [machineRatios, setMachineRatios] = useState<MachineTypeCount[]>([]);
-  const [selectedPeriod, setSelectedPeriod] = useState<PeriodValue>("today");
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodValue>("all");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -124,10 +141,11 @@ export default function DashboardPage() {
     setLoading(true);
     try {
       const params = getPeriodRange(selectedPeriod);
+      const incomeTrendEndpoint = selectedPeriod === "all" ? "/report/monthly-income" : "/report/daily-income";
       const [dashRes, profitRes, dailyRes, actRes, usageRes] = await Promise.all([
         api.get("/report/dashboard", { params }).catch(() => ({ data: {} })),
         api.get("/report/profit-summary", { params }).catch(() => ({ data: {} })),
-        api.get("/report/daily-income", { params }).catch(() => ({ data: [] })),
+        api.get(incomeTrendEndpoint, { params }).catch(() => ({ data: [] })),
         api.get("/report/recent-activities").catch(() => ({ data: [] })),
         api.get("/report/machine-usage").catch(() => ({ data: [] })),
       ]);
@@ -148,8 +166,10 @@ export default function DashboardPage() {
       if (Array.isArray(dailyRes.data)) {
         setDailyIncome({
           labels: dailyRes.data.map((d: any) => {
-            const dateStr = d.date || d.incomeDate || "";
-            return dateStr ? new Date(dateStr).toLocaleDateString("th-TH", { day: "numeric", month: "short" }) : "";
+            const dateStr = d.month || d.date || d.incomeDate || "";
+            return d.month
+              ? new Date(`${dateStr}-01`).toLocaleDateString("th-TH", { month: "short", year: "2-digit" })
+              : dateStr ? new Date(dateStr).toLocaleDateString("th-TH", { day: "numeric", month: "short" }) : "";
           }),
           data: dailyRes.data.map((d: any) => Number(d.totalIncome || d.total || d.amount || 0)),
         });
@@ -199,29 +219,36 @@ export default function DashboardPage() {
   if (authLoading || loading) return <LoadingSpinner />;
 
   const fmt = (n: number) => new Intl.NumberFormat("th-TH", { minimumFractionDigits: 0 }).format(n);
+  const periodLabel = getPeriodLabel(selectedPeriod);
+  const trendTitle = getTrendTitle(selectedPeriod);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="relative overflow-hidden rounded-[28px] border border-white/70 bg-gradient-to-br from-primary via-primary-dark to-slate-900 p-6 text-white shadow-[0_24px_70px_rgba(37,99,235,0.22)]">
+        <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
+        <div className="absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-sky-300/20 blur-3xl" />
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
         <div>
-          <h1 className="text-2xl font-bold text-text">Overview</h1>
-          <p className="text-sm text-text-secondary mt-1">ภาพรวมการทำงานและรายได้ของกิจการ</p>
+          <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-blue-100">Business Overview</p>
+          <h1 className="text-3xl font-extrabold tracking-tight mt-2">ภาพรวมร้านสะดวกซัก</h1>
+          <p className="text-sm text-blue-100 mt-2">ติดตามรายได้ ค่าใช้จ่าย เครื่อง และกิจกรรมล่าสุดตามช่วงเวลาที่เลือก</p>
         </div>
-        <div className="flex items-center gap-1 bg-white rounded-lg border border-border p-1 shadow-sm">
+        <div className="flex flex-wrap items-center gap-1 bg-white/12 rounded-2xl border border-white/20 p-1.5 shadow-sm backdrop-blur">
           {periodOptions.map((period) => (
             <button
               key={period.value}
               type="button"
               onClick={() => setSelectedPeriod(period.value)}
-              className={`px-4 py-1.5 rounded-md text-[13px] font-medium transition-all ${
+              className={`px-4 py-2 rounded-xl text-[13px] font-bold transition-all ${
                 selectedPeriod === period.value
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-text-secondary hover:text-text hover:bg-body"
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-blue-100 hover:text-white hover:bg-white/10"
               }`}
             >
               {period.label}
             </button>
           ))}
+        </div>
         </div>
       </div>
 
@@ -229,7 +256,7 @@ export default function DashboardPage() {
         {/* Total Income */}
         <div className="bg-white rounded-2xl p-5 border border-border shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start mb-2">
-            <p className="text-sm font-semibold text-text-secondary">รายได้สะสมทั้งหมด</p>
+            <p className="text-sm font-semibold text-text-secondary">รายได้รวม ({periodLabel})</p>
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
               <span className="text-lg">฿</span>
             </div>
@@ -259,21 +286,21 @@ export default function DashboardPage() {
         {/* Total Expenses */}
         <div className="bg-white rounded-2xl p-5 border border-border shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start mb-2">
-            <p className="text-sm font-semibold text-text-secondary">ค่าใช้จ่ายสะสม (Total Expenses)</p>
+            <p className="text-sm font-semibold text-text-secondary">ค่าใช้จ่ายรวม ({periodLabel})</p>
             <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500">
               <HiOutlineReceiptTax className="w-5 h-5" />
             </div>
           </div>
           <h3 className="text-[28px] font-bold text-text">฿{fmt(data?.totalExpense || 0)}</h3>
           <div className="mt-2 text-[13px] text-text-muted">
-            ยอดรวมค่าใช้จ่ายทั้งหมด
+            คำนวณตามช่วงเวลาที่เลือก
           </div>
         </div>
 
         {/* Net Profit */}
         <div className="bg-white rounded-2xl p-5 border border-emerald-100 shadow-sm flex flex-col justify-between bg-emerald-50/20 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start mb-2">
-            <p className="text-sm font-semibold text-emerald-600">กำไรสุทธิ (Net Profit)</p>
+            <p className="text-sm font-semibold text-emerald-600">กำไรสุทธิ ({periodLabel})</p>
             <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
               <HiOutlineTrendingUp className="w-5 h-5" />
             </div>
@@ -288,7 +315,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-2xl border border-border p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-base font-bold text-text">Trend รายได้รายสัปดาห์</h3>
+            <h3 className="text-base font-bold text-text">{trendTitle}</h3>
           </div>
           <div className="h-[250px]">
             {dailyIncome.labels.length > 0 ? (
@@ -321,7 +348,7 @@ export default function DashboardPage() {
                 }}
               />
             ) : (
-              <div className="flex items-center justify-center h-full text-text-muted text-sm">ยังไม่มีข้อมูลรายได้</div>
+              <div className="flex items-center justify-center h-full text-text-muted text-sm">ยังไม่มีข้อมูลรายได้ในช่วงนี้</div>
             )}
           </div>
         </div>

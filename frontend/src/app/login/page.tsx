@@ -28,17 +28,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-body p-4">
+    <div className="min-h-screen flex items-center justify-center bg-body p-4 relative overflow-hidden">
+      <div className="absolute -top-24 -left-24 w-80 h-80 rounded-full bg-primary/10 blur-3xl" />
+      <div className="absolute -bottom-32 -right-24 w-96 h-96 rounded-full bg-sky-300/20 blur-3xl" />
+
       {/* Login card */}
-      <div className="w-full max-w-[440px] bg-white rounded-[24px] shadow-lg border border-border overflow-hidden relative z-10" style={{ padding: "40px" }}>
+      <div className="w-full max-w-[460px] bg-white/90 backdrop-blur-xl rounded-[28px] shadow-[0_28px_80px_rgba(15,23,42,0.14)] border border-white/80 overflow-hidden relative z-10" style={{ padding: "40px" }}>
         <div>
           {/* Logo */}
           <div className="text-center flex flex-col items-center justify-center" style={{ marginBottom: "32px" }}>
-            <div className="w-[140px] h-[140px] rounded-2xl overflow-hidden bg-white border border-border shadow-sm mb-6 p-2 flex items-center justify-center">
+            <div className="w-[132px] h-[132px] rounded-[28px] overflow-hidden bg-white border border-border shadow-md shadow-primary/10 mb-6 p-3 flex items-center justify-center">
               <img src="/logo.png" alt="Ma Der Logo" className="w-full h-full object-contain" />
             </div>
-            <h1 className="font-bold text-text" style={{ fontSize: "26px", marginBottom: "8px" }}>เข้าสู่ระบบ Ma Der ซักผ้า</h1>
-            <p className="text-text-secondary font-medium" style={{ fontSize: "14px" }}>ยินดีต้อนรับกลับเข้าสู่ระบบจัดการร้านสะดวกซัก</p>
+            <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary mb-4">
+              Laundry Management
+            </div>
+            <h1 className="font-extrabold text-text tracking-tight" style={{ fontSize: "28px", marginBottom: "8px" }}>เข้าสู่ระบบ Ma Der ซักผ้า</h1>
+            <p className="text-text-secondary font-medium leading-6" style={{ fontSize: "14px" }}>จัดการรายรับ รายจ่าย และรายงานร้านสะดวกซักได้ในที่เดียว</p>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col" style={{ gap: "24px" }}>
@@ -64,20 +70,10 @@ export default function LoginPage() {
               />
             </div>
 
-            <div className="flex items-center justify-between mt-2">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 transition-all" />
-                <span className="text-[13px] text-text-secondary">Remember me</span>
-              </label>
-              <button type="button" className="text-[13px] font-medium text-primary hover:text-primary-dark transition-colors">
-                Forgot Password?
-              </button>
-            </div>
-
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 mt-2 rounded-xl bg-primary text-white text-[14px] font-semibold hover:bg-primary-dark active:scale-[0.98] shadow-md shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 mt-2 rounded-xl bg-primary text-white text-[14px] font-bold hover:bg-primary-dark active:scale-[0.98] shadow-lg shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-2">

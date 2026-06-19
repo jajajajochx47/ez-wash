@@ -25,21 +25,24 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-text flex items-center gap-2"><HiOutlineCog className="w-6 h-6 text-primary" /> ตั้งค่าระบบ (Settings)</h1>
-        <p className="text-sm text-text-secondary mt-1">จัดการสาขา เครื่องซักผ้า และหมวดหมู่ต่างๆ ของระบบ</p>
+      <div className="page-hero">
+        <div className="relative z-10">
+          <p className="page-eyebrow">System Setup</p>
+          <h1 className="page-title flex items-center gap-2"><HiOutlineCog className="w-7 h-7 text-primary" /> ตั้งค่าระบบ</h1>
+          <p className="page-subtitle">จัดการสาขา เครื่องซักผ้า และหมวดหมู่ต่าง ๆ ของระบบ</p>
+        </div>
       </div>
 
-      <div className="flex gap-2 bg-white rounded-xl p-1.5 border border-border shadow-sm overflow-x-auto">
+      <div className="toolbar-panel flex gap-2 p-1.5 overflow-x-auto">
         {tabs.map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 min-w-[140px] px-6 py-2.5 rounded-lg text-[13px] font-bold transition-all ${
-              activeTab === tab.key ? "bg-primary text-white shadow-sm" : "text-text-secondary hover:text-text hover:bg-body"
+            className={`flex-1 min-w-[140px] px-6 py-2.5 rounded-[14px] text-[13px] font-bold transition-all ${
+              activeTab === tab.key ? "bg-primary text-white shadow-md shadow-primary/20" : "text-text-secondary hover:text-primary hover:bg-sidebar-hover"
             }`}>{tab.label}</button>
         ))}
       </div>
       
-      <div className="bg-white rounded-2xl p-6 border border-border shadow-sm min-h-[500px]">
+      <div className="surface-panel p-6 min-h-[500px]">
         {activeTab === "branches" && <BranchesTab />}
         {activeTab === "machines" && <MachinesTab />}
         {activeTab === "categories" && <CategoriesTab />}
@@ -73,7 +76,7 @@ function BranchesTab() {
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {items.map(item => (
-          <div key={item.id} className="bg-body/30 rounded-xl p-5 border border-border hover:border-primary/40 transition-colors group">
+          <div key={item.id} className="soft-card p-5 hover:border-primary/40 transition-colors group">
             <div className="flex items-start justify-between">
               <div>
                 <h4 className="text-[15px] font-bold text-text">{item.name}</h4>
@@ -186,7 +189,7 @@ function MachinesTab() {
         {items.map(item => {
           const info = typeInfo[item.machineType] || typeInfo.OTHER;
           return (
-            <div key={item.id} className="bg-white rounded-xl p-5 border border-border shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-between">
+            <div key={item.id} className="soft-card p-5 hover:shadow-md transition-shadow group flex flex-col justify-between">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-inner ${info.bg} ${info.border}`}>{info.icon}</div>
@@ -273,7 +276,7 @@ function CategoriesTab() {
         <button onClick={() => { setEditing(null); setForm({ name: "" }); setModalOpen(true); }} className="flex items-center gap-2 px-5 py-2 rounded-lg bg-primary text-white shadow-md shadow-primary/20 text-[13px] font-semibold hover:bg-primary-dark transition-all"><HiOutlinePlus className="w-4 h-4" /> เพิ่มหมวดหมู่</button>
       </div>
       
-      <div className="bg-white rounded-xl border shadow-sm border-border overflow-hidden">
+      <div className="surface-panel overflow-hidden">
         <div className="divide-y divide-border">
           {items.length === 0 ? <p className="text-text-muted text-center py-12 text-[13px]">ยังไม่มีหมวดหมู่ค่าใช้จ่าย</p> : items.map(item => (
             <div key={item.id} className="flex items-center justify-between px-6 py-4 hover:bg-body/50 transition-colors">
